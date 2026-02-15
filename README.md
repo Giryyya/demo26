@@ -24,11 +24,13 @@
 | ISP - HQ-RTR | 172.16.1.1/28 |
 | ISP - BR-RTR |  172.16.2.1/28|
 | ISP - Internet | dhcp |
-| HQ-RTR |  |
-| BR-RTR |  |
-| HQ-RTR |  |
-| BR-RTR |  |
-| HQ-CLI |  |
+| HQ-RTR - ISP | 172.16.1.2/28 |
+| BR-RTR - ISP | 172.16.2.2/28 |
+|HQ-RTR - LAN | 192.168.1.1/26 |
+|BR-RTR - LAN | 192.168.2.1/28 |
+|HQ-SRV | 192.168.1.62/26 |
+|BR-SRV | 192.168.2.14/28 |
+| HQ-CLI | 192.168.1.3/26 |
 
 # Модуль 1
 
@@ -43,10 +45,6 @@ cd /etc
 vim hostname
 ```
 
-Либо:
-```
-hostname <название хоста>
-```
 ### У Linux есть несколько виртуальных консолей, которые переключаются по Ctrl+Alt+F*.
 
 Если не нужна графика можно отключить ее автозагрузку:
@@ -122,7 +120,7 @@ ipv4address:
 
 <img width="178" height="81" alt="image" src="https://github.com/user-attachments/assets/0614dc79-f4d1-4072-a885-0d84ad72a7f0" />
 
-ipv4route:
+ipv4route(на HQ-RTR и BR-RTR тоже настраиваем):
 
 <img width="223" height="27" alt="image" src="https://github.com/user-attachments/assets/6af8381c-3ec2-4a49-9efe-2d3cf6ac7eb3" />
 
@@ -159,7 +157,7 @@ systemctl enable network-restart.timer
 
   </details>
 
-## Настройте доступ к сети Интернет, на маршрутизаторе ISP
+## Настройте доступ к сети Интернет, на маршрутизаторах ISP, HQ-RTR, BR-RTR
 
  <details>
     <summary>ЗАДАНИЕ</summary>
@@ -192,11 +190,12 @@ net.ipv4.ip_forward=1
 ```
 net.ipv4.ip_forward=1
 ```
-Пропишите команду для настройки динамической трансляции адресов:
+Пропишите команду для настройки динамической трансляции адресов (ens33 - смотрит в WAN, ens37 - LAN):
 ```
-iptables -t nat -A POSTROUTING -o ens33(смотрит в WAN) -j MASQUERADE
-iptables -A FORWARD -i ens37(смотрит в LAN) -o ens33(смотрит в WAN) -j ACCEPT
+iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
+iptables -A FORWARD -i ens37 -o ens33 -j ACCEPT
 iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sysctl -p
 ```
 Далее необходимо сохранить настройки:
 ```
@@ -244,6 +243,9 @@ COMMIT
 ```
 iptables-restore -t /etc/sysconfig/iptables
 ```
-
+Если интернет на хостах не появился, еще раз прописываем:
+```
+sudo iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
+```
 
    </details> 
