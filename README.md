@@ -154,6 +154,10 @@ WantedBy=multi-user.target
 ```
 systemctl enable network-restart.timer
 ```
+Прописываем днс на всех адаптера (лишним не будет) - файл /etc/net/ifaces/ens33/resolv.conf:
+```
+nameserver 8.8.8.8
+```
 
   </details>
 
