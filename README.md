@@ -379,4 +379,87 @@ iface ens33.100 inet static
 
  </details>
 
+   <details>
+    <summary>НАЖМИ</summary>
 
+Создаем пользователя для ssh:
+```
+useradd -m -s /bin/bash sshuser
+passwd sshuser
+```
+Редактируем конфиг /etc/openssh/sshd_config(можно либо просто вписать эти строчки, либо найти и раскоментить их, в теории они все должны быть в конфиге):
+```
+Port 2026
+AllowUsers sshuser
+MaxAuthTries 2
+Banner /etc/openssh/banner
+PermitRootLogin no
+Protocol 2
+```
+Создаем баннер по пути который указывали в конфиге: /etc/openssh/banner:
+```
+***********************************************
+*         Authorized access only              *
+*         VHOD TOL'KO DLYA KRUTIH             *
+***********************************************
+```
+Прописываем правила для ssh в iptables на всех роутерах:
+```
+iptables -A INPUT -p tcp --dport 2026 -j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -j DROP
+sysctl -p
+iptables-save>/etc/iptables/rules.v4
+``` 
+Проверяем конфиг на ошибки:
+```
+sshd -t
+``` 
+Если ошибок нет запускаем sshd:
+```
+systemctl restart sshd
+```
+Добавляем ssh на новый порт в автозагрузку SELinux (для альта обычно не нужно, но на всякий пропишем):
+```
+semanage port -a -t ssh_port_t -p tcp 2026 2>/dev/null || true
+```
+Подключаемся:
+```
+ssh -p 2026 sshuser@192.168.1.62
+```
+
+ </details>
+
+ ## Между офисами HQ и BR, на маршрутизаторах HQ-RTR и BR-RTR необходимо сконфигурировать ip туннель
+
+   <details>
+    <summary>ЗАДАНИЕ</summary>
+  
+    На выбор технологии GRE или IP in IP 
+    
+• Сведения о туннеле занесите в отчёт.
+
+ </details>
+
+   <details>
+    <summary>НАЖМИ</summary>
+  
+ Создаем директорию для туннеля:
+ ```
+mkdir /etc/net/ifaces/tun1
+```
+Редактируем файл options следующим образом (HQ-RTR):
+
+<img width="191" height="196" alt="image" src="https://github.com/user-attachments/assets/107f46e5-c8c4-43b8-84fb-ae5e7c9a8ad3" />
+
+Здесь TUNLOCAL - IP адресс адаптера в сторону ISP на настраиваемом роутере, TUNREMOTE на другом роутере.
+
+Задаем IP адрес:
+```
+echo 10.10.10.1/30 > /etc/net/ifaces/tun1/ipv4address
+```
+Перезагружаем сеть:
+```
+systemctl restart network
+```
+
+ </details>
