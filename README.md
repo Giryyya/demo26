@@ -161,6 +161,7 @@ systemctl enable network-restart.timer
 
  <details>
     <summary>ЗАДАНИЕ</summary>
+  
 Настройте адресацию на интерфейсах: 
    
 • Интерфейс, подключенный к магистральному провайдеру, получает 
@@ -249,3 +250,129 @@ sudo iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
 ```
 
    </details> 
+
+##  Создайте локальные учетные записи
+
+ <details>
+    <summary>ЗАДАНИЕ</summary>
+  
+ Создайте пользователя remote_user на HQ-SRV и BR-SRV
+ 
+• Пароль пользователя sshuser с паролем P@ssw0rd 
+
+• Идентификатор пользователя 2026 
+
+• Пользователь sshuser должен иметь возможность запускать sudo без 
+ввода пароля 
+
+• Создайте пользователя net_admin на маршрутизаторах HQ-RTR и BR
+RTR 
+
+• Пароль пользователя net_admin с паролем P@ssw0rd 
+
+• При настройке ОС на базе Linux, запускать sudo без ввода пароля 
+
+• При настройке ОС отличных от Linux пользователь должен обладать 
+максимальными привилегиями.
+
+ </details>
+
+
+  <details>
+    <summary>НАЖМИ</summary>
+  
+Создаем пользователя remote_user с идентификатором 2026:
+```
+useradd -u 2026 remote_user
+```
+
+Идентификатор можно посмотреть с помощью команды id remote_user, либо в файле /etc/passwd
+
+Задаем пароль:
+```
+passwd remote_user
+```
+Добавляем в группу sudo:
+```
+usermod -aG wheel remote_user
+```
+Для того чтобы при выполнении команды sudo не запрашивался пароль необходимо отредактировать файл /etc/sudoers. Вписываем:
+```
+remote_user ALL=(ALL) NOPASSWD: ALL
+```
+
+ </details>
+
+ ##  Настройте коммутацию в сегменте HQ:
+
+  <details>
+    <summary>ЗАДАНИЕ</summary>
+  
+Трафик HQ-SRV должен принадлежать VLAN 100 
+
+• Трафик HQ-CLI должен принадлежать VLAN 200 
+
+• Предусмотреть возможность передачи трафика управления в VLAN 999 
+
+• Реализовать на HQ-RTR маршрутизацию трафика всех указанных VLAN 
+с использованием одного сетевого адаптера ВМ/физического порта 
+
+• Сведения о настройке коммутации внесите в отчёт
+
+ </details>
+
+ <details>
+    <summary>НАЖМИ</summary>
+ 
+Для начала установим nmtui дабы удобнее было настраивать:
+```
+apt-get install NetworkManager-tui
+```
+По необходимости прописываем днс в /etc/net/ifaces/ens33/resolv.conf
+```
+nameserver 8.8.8.8
+```
+
+Запускаем nmtui:
+```
+systemctl start NetworkManager
+systemctl status NetworkManager
+```
+Настройки для VLAN100 на HQ-RTR:
+
+<img width="739" height="553" alt="image" src="https://github.com/user-attachments/assets/dd101b5b-d419-493f-8f4b-e8a0ea870f8b" />
+
+На клиенте редачим файл /etc/net/interfaces:
+
+```
+auto ens33
+iface ens33 inet manual
+    up ip link set ens33 up
+
+auto ens33.100
+iface ens33.100 inet static
+    address 192.168.1.30/27
+    gateway 192.168.1.1
+    dns-nameservers 8.8.8.8
+    vlan-raw-device ens33
+```
+
+В теории оно должно работать, но не работает днс
+
+ </details>
+
+ ## Настройте безопасный удаленный доступ на серверах HQ-SRV и BR-SRV
+
+   <details>
+    <summary>ЗАДАНИЕ</summary>
+     
+ Для подключения используйте порт 2026 
+ 
+• Разрешите подключения исключительно пользователю sshuser 
+• Ограничьте количество попыток входа до двух 
+
+• Настройте баннер «Authorized access only». 
+
+ </details>
+
+
