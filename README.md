@@ -492,7 +492,7 @@ systemctl restart network
 apt-get install frr -y
 ```
 
-Включаем OSPF в конфиге /etc/frr/daemon:
+Включаем OSPF в конфиге /etc/frr/daemons:
 
 <img width="863" height="684" alt="image" src="https://github.com/user-attachments/assets/889ab48a-5ad0-45ea-ae7e-e93045da4910" />
 
@@ -509,5 +509,99 @@ vtysh
 conf t
 router ospf
 passive-interface default
+network 192.168.1.0/26 area 0
+network 192.168.2.0/28 area 0
+network 10.10.10.0/30 area 0
+area 0 authentication
+exit
+```
+Настраиваем интерфейсы(туннель)(все там же):
+```
+interface tun1
+no ip ospf network broadcast
+no ip ospf passive
+ip ospf authentication
+ip ospf authentication-key password
+exi:
+```
+Не забываем сохранить изменения (как в циске):
+```
+write
+```
+Перезапускаем frr:
+```
+systemctl restart frr
+```
+Проверяем конфиг /etc/frr/frr.conf:
+
+<img width="995" height="654" alt="image" src="https://github.com/user-attachments/assets/2b8595f1-2102-46b9-bea6-acf70527605a" />
+
+Проверить можно либо пингом либо:
+```
+vtysh
+show ip ospf route
+```
+
+<img width="498" height="220" alt="image" src="https://github.com/user-attachments/assets/f7df5030-7a98-4561-a69c-ba35601ba708" />
+
+ </details>
+
+##  Настройка динамической трансляции адресов маршрутизаторах HQ-RTR и BR-RTR
+
+<details>
+    <summary>НАЖМИ</summary>
+
+### Делали раннее, если не делали, то настройки как на ISP
+
+ </details>
+
+ ## Настройте протокол динамической конфигурации хостов для сети в сторону HQ-CLI
+
+ <details>
+    <summary>ЗАДАНИЕ</summary>
+
+Настройте нужную подсеть 
+
+• В качестве сервера DHCP выступает маршрутизатор HQ-RTR 
+• Клиентом является машина HQ-CLI
+
+• Исключите из выдачи адрес маршрутизатора 
+
+• Адрес шлюза по умолчанию – адрес маршрутизатора HQ-RTR 
+
+• Адрес DNS-сервера для машины HQ-CLI – адрес сервера HQ-SRV 
+
+• DNS-суффикс – au-team.irpo 
+
+• Сведения о настройке протокола занесите в отчёт.
+
+ </details>
+
+ <details>
+    <summary>НАЖМИ</summary>
+  
+  Для начала укажем сетевой интерфейс, через который будет работать DHCP-сервер:
+```
+vim /etc/sysconfig/dhcpd
+```
+
+<img width="567" height="147" alt="image" src="https://github.com/user-attachments/assets/cd9ea117-b1f3-43e2-afa7-785c9851fbd5" />
+
+В папке /etc/dhcp/ необходимо создать файл dhcpd.conf:
+```
+cp dhcpd.conf.example dhcpd.conf
+```
+Отредактируйте файл dhcpd.conf следующим образом:
+
+<img width="564" height="204" alt="image" src="https://github.com/user-attachments/assets/e7392380-c2cd-48a2-8484-c4701e7ce6ca" />
+
+Перезагружаем службу:
+```
+systemctl restart dhcpd
+```
+
+Чтобы служба включалась после перезапуска устройства можно добавить ее в systemd юнит следующим образом(редактируется служба network-restart.service):
+
+![image](https://github.com/user-attachments/assets/e929cbfd-2d7e-49c1-9a27-db636dfb165c)
 
  </details>
