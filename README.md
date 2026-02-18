@@ -665,6 +665,7 @@ chown root:named /etc/bind/zone/2.168.192.in-addr.arpa.db
 
 <img width="883" height="716" alt="image" src="https://github.com/user-attachments/assets/70c19ee1-57a3-4c7e-9d83-bc942ac153a1" />
 
+###  ВАЖНО!!! Я добавил в зону прямого просмотра все устройства кроме ISP и сделал обратные зоны для всех устройств в подсетях 1.0 и 2.0. Смотрите задание, там могут быть другие условия.
 Проверяем зоны:
 ```
 named-checkconf -z
