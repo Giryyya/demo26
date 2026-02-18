@@ -624,6 +624,92 @@ DNS сервер(77.88.8.7, 77.88.8.3 или другие)
  <details>
     <summary>НАЖМИ</summary>
 
+Для начала необходимо отредактировать файл /etc/bind/options.conf:
+```
+listen-on { any; };
+allow-query { any; };
+allow-transfer { 192.168.33.254; };
+```
+```
+systemctl restart network
+```
+Автозагрузка bind:
+```
+systemctl enable --now bind
+```
+Создаем прямую и обратную зону в /etc/bind/local.conf:
+
+<img width="902" height="683" alt="image" src="https://github.com/user-attachments/assets/ba19e661-36c9-4a0a-aa3e-53a43b503f2a" />
+
+Копируем дефолты:
+```
+cp /etc/bind/zone/{localhost,au.db}
+cp /etc/bind/zone/127.in-addr.arpa /etc/bind/zone/1.168.192.in-addr.arpa.db
+cp /etc/bind/zone/127.in-addr.arpa /etc/bind/zone/2.168.192.in-addr.arpa.db
+```
+Назначаем права:
+```
+chown root:named /etc/bind/zone/au.db
+chown root:named /etc/bind/zone/1.168.192.in-addr.arpa.db
+chown root:named /etc/bind/zone/2.168.192.in-addr.arpa.db
+```
+Настраиваем зону прямого просмотра /etc/bind/zone/au.db:
+
+<img width="897" height="657" alt="image" src="https://github.com/user-attachments/assets/86b0b940-e5f3-4000-b5e1-cc2e63ac3c3e" />
+
+Настраиваем зону обратного просмотра /etc/bind/zone/1.168.192.in-addr.arpa.db:
+
+<img width="918" height="681" alt="image" src="https://github.com/user-attachments/assets/326fc7d8-10f9-48af-ab0d-0c1f0c8c94a5" />
+
+Настраиваем зону обратного просмотра /etc/bind/zone/2.168.192.in-addr.arpa.db:
+
+<img width="883" height="716" alt="image" src="https://github.com/user-attachments/assets/70c19ee1-57a3-4c7e-9d83-bc942ac153a1" />
+
+Проверяем зоны:
+```
+named-checkconf -z
+```
+
+<img width="506" height="189" alt="image" src="https://github.com/user-attachments/assets/fde35c82-e213-4e02-86ed-5d72d87e1ffb" />
+
+В файле /etc/hosts прописываем адрес сервера:
+```
+192.168.1.62   hq-srv.au-team.irpo hq-srv
+```
+
+<img width="863" height="690" alt="image" src="https://github.com/user-attachments/assets/edb3b0c9-a488-42db-9857-be7dfe9e338c" />
+
+Чтобы днс заработал на клиентах необходимо добавить адрес сервера в resolv.conf. Это делается разными способами и зависит по всей видимости от типа ОС (сервер/воркстейшн) и (почему-то) от наличия графики. Конечной целью будет привести файл /etc/resolv.conf к следующему виду:
+
+<img width="450" height="123" alt="image" src="https://github.com/user-attachments/assets/328af76d-079d-411f-ab39-c770fbfdce94" />
+
+Это можно сделать разными способами:
+
+### 1 способ:
+
+В /etc/net/ifaces/ens33/resolv.conf прописываем:
+```
+search au.team
+nameserver 192.168.1.62
+```
+И так делаем во всех интерфейсах (и на днс сервере тоже делаем)
+
+Перезагружаем сеть:
+```
+systemctl restart network
+```
+Если адрес сервера не появился то просто удаляем /etc/resolv.conf и прописываем туда тоже самое что и в resolv.conf на интерфейсах:
+```
+rm resolv.conf
+rm resolv.conf~
+```
+
+
+### 2 способ (чаще работает):
+
+В /etc может лежать файлик resolvconf.conf (как показывает практика работает он на ОС без графики). В нем указываем следующее:
+
+<img width="1006" height="702" alt="image" src="https://github.com/user-attachments/assets/ab594bf8-3399-45b1-b5ad-89537df1cdf7" />
 
 
  </details>
