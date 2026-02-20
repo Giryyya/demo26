@@ -68,7 +68,7 @@ startx
     <summary>ЗАДАНИЕ</summary>
    
 • IP-адрес должен быть из приватного диапазона, в случае, если сеть 
-локальная, согласно RFC1918 
+локальная, согласно RFC1918 (10.0.0.0/8, 192.168.0.0/16, 172.16.0.0/12)
    
 • Локальная сеть в сторону HQ-SRV(VLAN 100) должна вмещать не 
 более 32 адресов 
@@ -1056,4 +1056,150 @@ mount -t nfs 192.168.1.62:/raid/nfs /mnt/nfs
 echo '192.168.1.62:/raid/nfs /mnt/nfs nfs auto 0 0 ' >> /etc/fstab
 ```
 
+ </details>
+
+ ## Настройте службу сетевого времени на базе сервиса chrony на маршрутизаторе ISP
+
+ <details>
+    <summary>ЗАДАНИЕ</summary>
+ 
+Вышестоящий сервер ntp на маршрутизаторе ISP - на выбор участника 
+
+• Стратум сервера - 5 
+
+• В качестве клиентов ntp настройте: HQ-SRV, HQ-CLI, BR-RTR, BR-SRV.
+
+ </details>
+
+ <details>
+    <summary>НАЖМИ</summary>
+ 
+Настраиваем маршрутизацию до ISP:
+### ISP:
+Устанавливаем frr:
+```
+apt-get install frr -y
+```
+Включаем OSPF в конфиге /etc/frr/daemons:
+
+<img width="863" height="684" alt="image" src="https://github.com/user-attachments/assets/889ab48a-5ad0-45ea-ae7e-e93045da4910" />
+
+Запускаем frr:
+```
+systemctl enable --now frr
+```
+Переходим в консоль frr:
+```
+vtysh
+```
+Настраиваем настройки в терминале:
+```
+conf t
+router ospf
+passive-interface default
+network 192.168.1.0/26 area 0
+network 192.168.2.0/28 area 0
+network 10.10.10.0/30 area 0
+network 172.16.1.0/28 area 0
+network 172.16.2.0/28 area 0
+area 0 authentication
+exit
+```
+Настраиваем интерфейсы(ens37, ens38):
+```
+interface ens37
+no ip ospf network broadcast
+no ip ospf passive
+ip ospf authentication
+ip ospf authentication-key password
+exit
+```
+Не забываем сохранить изменения (как в циске):
+```
+write
+```
+Перезапускаем frr:
+```
+systemctl restart frr
+```
+### HQ-RTR и BR-RTR:
+
+В frr необходимо добавить сети ISP:
+```
+vtysh
+conf t
+router ospf
+network 172.16.1.0/28 area 0
+network 172.16.2.0/28 area 0
+ex
+interface ens33
+no ip ospf network broadcast
+no ip ospf passive
+ip ospf authentication
+ip ospf authentication-key password
+exit
+do wr
+```
+Перезапускаем frr:
+```
+systemctl restart frr
+```
+### Настраиваем chrony на ISP:
+
+Устанавливаем Chrony:
+```
+apt-get install chrony -y
+```
+Редактируем Файл /etc/chrony.conf:
+```
+server 127.0.0.1 iburst prefer
+local stratum 5
+allow 192.168.1.0/26
+allow 192.168.2.0/28
+```
+Должно выглядеть так:
+
+<img width="852" height="228" alt="image" src="https://github.com/user-attachments/assets/14fe6b26-2773-47d9-afcd-d3155e7efc76" />
+
+Перезазгружаем Chrony:
+```
+systemctl restart chronyd
+```
+### На клиенте:
+Устанавливаем Chrony:
+```
+apt-get install chrony -y
+```
+Редачим /etc/chrony.conf (192.168.189.131 - IP на ISP который смотрит в сеть):
+```
+server 192.168.189.131 iburst
+```
+Перезапускаем Chrony:
+```
+systemctl restart chronyd
+```
+Проверяем:
+```
+chronyc sources
+```
+
+Если стратум не 5, то можно попробовать поставить ntp вместо chrony:
+```
+apt-get install ntp
+vim /etc/ntp.conf
+```
+Указываем:
+```
+server 127.127.1.0
+server ntp2.vniiftri.ru iburst
+fudge 127.127.1.0 stratum 5
+restrict 192.168.11.0 mask 255.255.255.0 nomodify notrap
+restrict 192.168.33.0 mask 255.255.255.0 nomodify notrap
+```
+Запускаем и проверяем:
+```
+systemctl enable ntp
+systemctl start ntp
+ntpq -p
+```
  </details>
