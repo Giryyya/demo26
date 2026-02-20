@@ -906,3 +906,154 @@ Cmnd_Alias HQ_COMMANDS = /bin/cat, /bin/grep, /usr/bin/id
 ```
 
  </details>
+
+## Сконфигурируйте файловое хранилище на сервере HQ-SRV
+
+<details>
+    <summary>ЗАДАНИЕ</summary>
+ 
+При помощи двух подключенных к серверу дополнительных дисков 
+размером 1 Гб сконфигурируйте дисковый массив уровня 0 
+
+• Имя устройства – md0, при необходимости конфигурация массива 
+размещается в файле /etc/mdadm.conf 
+
+• Создайте раздел, отформатируйте раздел, в качестве файловой системы 
+используйте ext4 
+
+• Обеспечьте автоматическое монтирование в папку /raid
+
+ </details>
+
+ <details>
+    <summary>НАЖМИ</summary>
+ 
+Подключаем диски через Vmware:
+
+<img width="342" height="310" alt="image" src="https://github.com/user-attachments/assets/36c77e6f-324c-475c-8cfd-dc4909c79dca" />
+
+Устанавливаем mdadm:
+```
+apt-get install mdadm -y
+```
+Смотрим какие диски у нас имеются:
+```
+lsblk
+```
+
+<img width="619" height="147" alt="image" src="https://github.com/user-attachments/assets/c927e347-a2a6-41cf-a2ef-5d9dea7bb214" />
+
+Далее создаем разделы у дисков:
+```
+cfdisk /dev/sdb
+```
+
+Выбираем gpt:
+
+<img width="757" height="520" alt="image" src="https://github.com/user-attachments/assets/e6fda1aa-29c7-4b1c-b612-1fd0b35ef848" />
+
+Жмем кнопку New:
+
+<img width="1069" height="744" alt="image" src="https://github.com/user-attachments/assets/6d22b1a9-4e9a-4cb6-b68a-d3769d30f8e8" />
+
+Выбираем максимальный размер:
+
+<img width="1097" height="741" alt="image" src="https://github.com/user-attachments/assets/138f761c-3aab-4471-9556-db7347c3e6c9" />
+
+Записываем изменения (рулить в утилите на стрелочки):
+
+<img width="1096" height="750" alt="image" src="https://github.com/user-attachments/assets/5953107b-1436-4179-b8f1-bfc79883e76f" />
+
+Полностью прописываем yes:
+
+<img width="877" height="276" alt="image" src="https://github.com/user-attachments/assets/d7c400f2-fb05-4cf7-a307-fda30e30a49a" />
+
+По итогу должно получиться так:
+
+<img width="633" height="201" alt="image" src="https://github.com/user-attachments/assets/7ae1694f-065c-479d-92cc-def149e2df1b" />
+ 
+Создаем массив md0 0 уровня:
+```
+mdadm --create --verbose /dev/md0 -l 0 -n 2 /dev/sdb1 /dev/sdc1
+```
+
+Проверяем:
+
+<img width="656" height="213" alt="image" src="https://github.com/user-attachments/assets/b1c550d2-5b0b-43a1-8466-aaa8559a87eb" />
+
+Создаем таблицу раздела:
+```
+mkfs -t ext4 /dev/md0
+```
+Сохраняем конфигураци:
+```
+mdadm --detail --scan --verbose /dev/md0 > /etc/mdadm.conf
+```
+Монтируем массив:
+```
+echo '/dev/md0 /raid ext4 defaults 0 0' >> /etc/fstab
+mount /dev/md0 /raid
+```
+ </details>
+
+ ## Настройте сервер сетевой файловой системы (nfs) на HQ-SRV
+
+ <details>
+    <summary>ЗАДАНИЕ</summary>
+ 
+В качестве папки общего доступа выберите /raid/nfs, доступ для чтения и записи исключительно для сети в сторону HQ-CLI 
+
+• На HQ-CLI настройте автомонтирование в папку /mnt/nfs 
+
+• Основные параметры сервера отметьте в отчёте
+
+ </details>
+
+  <details>
+    <summary>НАЖМИ</summary>
+
+### На сервере: 
+Создаем папку в /raid:
+```
+mkdir /raid/nfs
+```
+Скачиваем nfs:
+```
+apt-get install nfs-utils
+```
+В файле /etc/exports добавляем строчку:
+```
+/raid/nfs 192.168.1.0/26(rw,sync,no_root_squash,subtree_check)
+```
+Запускаем nfs:
+```
+systemctl enable --now nfs-server
+```
+Проверяем появилась ли папка:
+```
+exportfs
+```
+
+<img width="271" height="62" alt="image" src="https://github.com/user-attachments/assets/491f2649-93c5-4de1-91ed-91636d116fbd" />
+
+Если не появилась - еще раз ребутаем nfs.
+
+### На клиенте:
+Устанавливаем nfs:
+```
+nfs-utils
+```
+Создаем папку:
+```
+mkdir /mnt/nfs
+```
+Монтируем папку:
+```
+mount -t nfs 192.168.1.62:/raid/nfs /mnt/nfs
+```
+Настраиваем автоматическое монтирование:
+```
+echo '192.168.1.62:/raid/nfs /mnt/nfs nfs auto 0 0 ' >> /etc/fstab
+```
+
+ </details>
