@@ -406,7 +406,6 @@ Protocol 2
 Прописываем правила для ssh в iptables на всех роутерах:
 ```
 iptables -A INPUT -p tcp --dport 2026 -j ACCEPT
-iptables -A INPUT -p tcp --dport 22 -j DROP
 sysctl -p
 iptables-save>/etc/iptables/rules.v4
 ``` 
@@ -1202,4 +1201,59 @@ systemctl enable ntp
 systemctl start ntp
 ntpq -p
 ```
+ </details>
+
+## Сконфигурируйте ansible на сервере BR-SRV
+
+ <details>
+    <summary>ЗАДАНИЕ</summary>
+ 
+Сформируйте файл инвентаря, в инвентарь должны входить HQ-SRV, HQ-CLI, HQ-RTR и BR-RTR 
+
+• Рабочий каталог ansible должен располагаться в /etc/ansible 
+
+• Все указанные машины должны без предупреждений и ошибок отвечать 
+pong на команду ping в ansible посланную с BR-SRV.
+
+ </details>
+
+  <details>
+    <summary>НАЖМИ</summary>
+ 
+Устанавливаем Ansible:
+```
+apt-get install ansible -y
+```
+Заходим под sshuser и генерируем ключи, которые будут расположены в /home/sshuser/.ssh:
+```
+ssh -p 2026 sshuser@192.168.2.14
+ssh-keygen
+```
+Отправляем открытый ключ на другие хосты (Для начала необходимо настроить ssh где не настроен) (Смотрите на порты, у меня по итогу не оч заработало если везде 2026):
+```
+ssh-copy-id -p 2026 sshuser@192.168.1.62
+ssh-copy-id -p 2026 sshuser@192.168.1.3
+ssh-copy-id -p 2026 sshuser@192.168.2.1
+ssh-copy-id -p 2026 sshuser@192.168.1.1
+```
+Создаем файл инвентаря и вносим туда хосты /etc/ansible/hosts:
+```
+[hq]
+192.168.1.1 ansible_port=2026 ansible_user=sshuser
+192.168.1.3 ansible_port=2026 ansible_user=sshuser
+192.168.1.62 ansible_port=2026 ansible_user=sshuser
+
+[br]
+192.168.2.1 ansible_port=2026 ansible_user=sshuser
+```
+Редактируем конфиг /etc/ansible/ansible.cfg:
+```
+[defaults]
+interpreter_python=auto_silent
+```
+Проверяем работоспособность:
+```
+ansible all -m ping
+```
+
  </details>
