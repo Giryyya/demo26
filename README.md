@@ -1257,3 +1257,270 @@ ansible all -m ping
 ```
 
  </details>
+
+## Разверните веб приложение в docker на сервере BR-SRV
+
+ <details>
+    <summary>ЗАДАНИЕ</summary>
+ 
+Средствами docker должен создаваться стек контейнеров с веб приложением и базой данных 
+
+• Используйте образы site_latestи mariadb_latestрасполагающиеся в директории docker в образе Additional.iso 
+
+• Основной контейнер testapp должен называться tespapp 
+
+• Контейнер с базой данных должен называться db 
+
+• Импортируйте образы в docker, укажите в yaml файле параметры подключения к СУБД, имя БД - testdb, пользователь testс паролем P@ssw0rd, порт приложения 8080, при необходимости другие параметры 
+
+• Приложение должно быть доступно для внешних подключений через порт 8080
+
+ </details>
+
+ <details>
+    <summary>НАЖМИ</summary>
+ 
+Устанавливаем Docker:
+```
+apt-get install docker-ce docker-compose -y
+```
+Запускаем Docker:
+```
+systemctl enable --now docker
+```
+Прооверяем работоспособность:
+```
+docker run hello-world
+```
+Создаем директорию для монтирования образа:
+```
+mkdir -p /mnt/iso
+```
+Создаем site_latest:
+```
+mkdir -p ~/docker-site
+cd ~/docker-site
+```
+Создаем файл index.php и прописываем в нем:
+```
+<?php
+echo "<h1>Test Application</h1>";
+echo "<h2>Connection to Database:</h2>";
+
+$host = getenv('DB_HOST') ?: 'db';
+$dbname = getenv('DB_NAME') ?: 'testdb';
+$user = getenv('DB_USER') ?: 'test';
+$pass = getenv('DB_PASSWORD') ?: 'P@ssw0rd';
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $pass);
+    echo "<p style='color: green;'>Connected to MariaDB successfully!</p>";
+    
+    // Create test table
+    $pdo->exec("CREATE TABLE IF NOT EXISTS test (id INT AUTO_INCREMENT PRIMARY KEY, message VARCHAR(255))");
+    echo "<p>Test table created/checked</p>";
+    
+    // Insert test data
+    $stmt = $pdo->prepare("INSERT INTO test (message) VALUES (?)");
+    $stmt->execute(['Hello from Docker!']);
+    echo "<p>Test data inserted</p>";
+    
+    // Read test data
+    $result = $pdo->query("SELECT * FROM test");
+    echo "<h3>Database entries:</h3><ul>";
+    while ($row = $result->fetch()) {
+        echo "<li>" . htmlspecialchars($row['message']) . "</li>";
+    }
+    echo "</ul>";
+    
+} catch (PDOException $e) {
+    echo "<p style='color: red;'>Connection failed: " . $e->getMessage() . "</p>";
+}
+echo "<p>App port: " . (getenv('APP_PORT') ?: '8080') . "</p>";
+phpinfo();
+?>
+```
+Создаем Dockerfile и прописываем в нем:
+```
+FROM php:7.4-apache
+
+# Install PHP extensions for MariaDB/MySQL
+RUN docker-php-ext-install pdo_mysql mysqli
+
+# Copy application files
+COPY index.php /var/www/html/
+COPY info.php /var/www/html/
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Configure Apache
+RUN a2enmod rewrite
+
+# Expose port
+EXPOSE 8080
+
+# Modify apache to use port 8080
+RUN sed -i 's/80/8080/g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's/80/8080/g' /etc/apache2/ports.conf
+
+# Start Apache
+CMD ["apache2-foreground"]
+```
+Создаем info.php и прописываем в нем:
+```
+<?php
+phpinfo();
+?>
+```
+Собираем образ веб-приложения:
+```
+docker build -t site_latest .
+```
+Скачиваем MariaDB:
+```
+docker pull mariadb:10.5
+```
+Создаем образ:
+```
+docker tag mariadb:10.5 mariadb_latest
+```
+Создаем docker-compose.yml командой:
+```
+cat > docker-compose.yml << 'EOF'
+version: '3.8'
+
+services:
+  db:
+    image: mariadb_latest
+    container_name: db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: test
+      MYSQL_PASSWORD: P@ssw0rd
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app_network
+    ports:
+      - "3306:3306"
+
+  testapp:
+    image: site_latest
+    container_name: tespapp
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: testdb
+      DB_USER: test
+      DB_PASSWORD: P@ssw0rd
+      APP_PORT: 8080
+    ports:
+      - "8080:8080"
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  db_data:
+EOF
+```
+Проверяем что образы созданы:
+```
+docker images | grep -E "site_latest|mariadb_latest"
+```
+Проверяем конфиг (должен вывестись сам конфиг):
+```
+docker compose config
+```
+Запускаем контейнеры:
+```
+docker compose up -d
+docker compose up -d testapp
+```
+Если ловим такую ошибку, то делаем следующее:
+
+<img width="1704" height="133" alt="image" src="https://github.com/user-attachments/assets/c45fcc5d-cebd-44d7-8827-871d57d0e686" />
+
+Смотрим чем занят порт и убиваем процесс:
+```
+ss -tulpn | grep 8080
+kill -9 2847
+```
+
+<img width="826" height="52" alt="image" src="https://github.com/user-attachments/assets/366965e8-5d81-459f-a2db-b8ba92552d27" />
+
+Удаляем контейнер:
+```
+docker rm -f tespapp
+```
+Останавливаем контейнеры:
+```
+docker compose down
+```
+Проверяем порт еще раз:
+```
+ss -tulpn | grep 8080
+```
+Запускаем заново и смотрим:
+```
+docker compose up -d
+docker compose ps
+```
+
+<img width="1236" height="200" alt="image" src="https://github.com/user-attachments/assets/49ab6451-9061-4f77-bcfc-7786362be832" />
+
+Проверяем работоспособность:
+
+<img width="1716" height="917" alt="image" src="https://github.com/user-attachments/assets/daf0a120-40ed-4aa6-b350-4f375d9f621c" />
+
+Для того чтобы другие хосты увидели данное творение необходимо настроить iptables на BR-SRV:
+```
+iptables -F
+iptables -X
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+iptables -A INPUT -p tcp --dport 2026 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8081 -j ACCEPT
+iptables -A INPUT -p tcp --dport 3306 -j ACCEPT
+mkdir /etc/iptables
+iptables-save > /etc/iptables/rules.v4
+```
+Перезапускаем Docker и проверяем правила:
+```
+systemctl restart docker
+iptables -L DOCKER -n -v
+iptables -t nat -L DOCKER -n -v
+iptables -L INPUT -n -v | grep -E "8080|8081"
+```
+
+<img width="1081" height="249" alt="image" src="https://github.com/user-attachments/assets/204b1b80-3a80-42c7-ab2f-993374c0d54b" />
+
+### Для теста я поднимал еще один контейнер на 8081 порту, у вас его быть не должно и можно даже правило для него не создавать и не проверять ничего для этого порта
+
+<img width="861" height="71" alt="image" src="https://github.com/user-attachments/assets/f97bdfb7-a4bd-4ae7-8292-765a7263d787" />
+
+Перезапускаем контейнер:
+```
+docker compose down
+docker compose up -d
+```
+Проверяем на других хостах (либо через браузер http://192.168.2.14:8080):
+```
+curl -v http://192.168.2.14:8080
+```
+
+ </details> 
