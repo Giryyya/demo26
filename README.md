@@ -1,4 +1,4 @@
-# Информация по сети
+<img width="689" height="584" alt="image" src="https://github.com/user-attachments/assets/fe3152b1-4484-4bd4-bdb3-96a0ba0838ad" /># Информация по сети
 ### Схема сети:
 
  <details>
@@ -1529,3 +1529,299 @@ curl -v http://192.168.2.14:8080
 ```
 
  </details> 
+
+## Разверните веб приложениена сервере HQ-SRV
+
+ <details>
+    <summary>ЗАДАНИЕ</summary>
+ 
+Используйте веб-сервер apache 
+
+• В качестве системы управления базами данных используйте mariadb 
+
+• Файлы веб приложения и дамп базы данных находятся в директории web образа Additional.iso 
+
+• Выполните импорт схемы и данных из файла dump.sql в базу данных webdb 
+
+• Создайте пользователя webс паролем P@ssw0rd и предоставьте ему права доступа к этой базе данных 
+
+• Файлы index.php и директорию images скопируйте в каталог веб сервера apache 
+
+• В файле index.php укажите правильные учётные данные для подключения к БД 
+
+• Запустите веб сервер и убедитесь в работоспособности приложения 
+
+• Основные параметры отметьте в отчёте
+
+ </details>
+
+ <details>
+    <summary>НАЖМИ</summary>
+
+ ### Если есть ISO файл:
+
+ Создаем директорию для монтирования:
+```
+mkdir -p /mnt/iso
+```
+Монтируем ISO-образ (нужно знать путь к Additional.iso):
+```
+mount -o loop /путь/к/Additional.iso /mnt/iso
+```
+Копируем директорию web:
+```
+cp -r /mnt/iso/web ~/
+```
+Проверяем содержимое:
+```
+ls -la ~/web/
+```
+Размонтируем ISO:
+```
+umount /mnt/iso
+```
+### Если ISO нет:
+Создаем структуру:
+```
+mkdir -p ~/web
+cd ~/web
+```
+Создаем index.php командой:
+```
+cat > index.php << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Application on HQ-SRV</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        .success { color: green; }
+        .error { color: red; }
+        img { max-width: 300px; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Test Application on HQ-SRV (192.168.2.14)</h1>
+    
+    <?php
+    // Database connection parameters
+    $host = 'localhost';
+    $dbname = 'webdb';
+    $user = 'web';
+    $pass = 'P@ssw0rd';
+    
+    echo "<h2>Server Information:</h2>";
+    echo "<pre>";
+    echo "Hostname: " . gethostname() . "\n";
+    echo "Server IP: 192.168.2.14\n";
+    echo "Date: " . date('Y-m-d H:i:s') . "\n";
+    echo "PHP Version: " . phpversion() . "\n";
+    echo "</pre>";
+    
+    // Test database connection
+    echo "<h2>Database Connection:</h2>";
+    try {
+        $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $pass);
+        echo "<p class='success'>Connected to MariaDB successfully!</p>";
+        
+        // Show some data from database
+        $stmt = $pdo->query("SHOW TABLES");
+        $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        echo "<h3>Tables in database:</h3>";
+        echo "<ul>";
+        foreach ($tables as $table) {
+            echo "<li>$table</li>";
+        }
+        echo "</ul>";
+        
+    } catch (PDOException $e) {
+        echo "<p class='error'>Connection failed: " . $e->getMessage() . "</p>";
+    }
+    ?>
+    
+    <h2>Images:</h2>
+    <div>
+        <?php
+        $image_dir = 'images';
+        if (is_dir($image_dir)) {
+            $images = glob($image_dir . "/*.{jpg,jpeg,png,gif}", GLOB_BRACE);
+            foreach ($images as $image) {
+                echo "<img src='$image' alt='Image'>";
+            }
+        } else {
+            echo "<p>Images directory not found</p>";
+        }
+        ?>
+    </div>
+</body>
+</html>
+EOF
+```
+Создаем тестовое изображение:
+```
+mkdir -p images
+echo "This is a test image" > images/test.txt
+```
+Создаем dump.sql командой:
+```
+cat > dump.sql << 'EOF'
+-- Create database
+CREATE DATABASE IF NOT EXISTS webdb;
+USE webdb;
+
+-- Create users table
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create products table
+CREATE TABLE IF NOT EXISTS products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    price DECIMAL(10,2),
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert sample data
+INSERT INTO users (username, email) VALUES
+    ('admin', 'admin@example.com'),
+    ('user1', 'user1@example.com'),
+    ('user2', 'user2@example.com');
+
+INSERT INTO products (name, price, description) VALUES
+    ('Product 1', 19.99, 'First test product'),
+    ('Product 2', 29.99, 'Second test product'),
+    ('Product 3', 39.99, 'Third test product');
+
+-- Create a test table for the application
+CREATE TABLE IF NOT EXISTS test (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    message VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO test (message) VALUES
+    ('Hello from HQ-SRV!'),
+    ('Database is working'),
+    ('Test entry 3');
+EOF
+```
+Устанавливаем Apache, MariaDB, PHP:
+```
+apt-get update
+apt-get install apache2 -y
+apt-get install mariadb-server mariadb-client -y
+apt-get install php8.2 php8.2-mysqli php8.2-mysqlnd -y
+apt-get install php8.2-pdo php8.2-mbstring php8.2-curl php8.2-json apache2-mod_php8.2 -y
+```
+Создаем символические ссылки из available в enabled:
+```
+ln -sf /etc/httpd2/conf/mods-available/mod_php8.2.load /etc/httpd2/conf/mods-enabled/
+ln -sf /etc/httpd2/conf/mods-available/mod_php8.2.conf /etc/httpd2/conf/mods-enabled/
+```
+Проверяем результат:
+```
+ls -la /etc/httpd2/conf/mods-enabled/ | grep php
+httpd2 -t
+```
+Перезапускаем апач:
+```
+systemctl restart httpd2
+```
+
+<img width="1033" height="105" alt="image" src="https://github.com/user-attachments/assets/bad138e0-bba0-4865-9b78-dfead29a1499" />
+
+Проверяем версии:
+```
+httpd2 -v
+mysql --version
+php -v
+```
+Запускаем MariaDB:
+```
+systemctl enable --now mariadb
+```
+Настраиваем MariaDB:
+```
+mysql_secure_installation
+```
+Ответы:
+
+<img width="689" height="584" alt="image" src="https://github.com/user-attachments/assets/20c87c6e-3af5-4f57-8ec9-908ec50cb65c" />
+
+Подключаемся к MariaDB:
+```
+mysql -u root -p
+```
+Создаем БД:
+```
+CREATE DATABASE IF NOT EXISTS webdb;
+USE webdb;
+```
+Импортируем дамп:
+```
+SOURCE /root/web/dump.sql;
+```
+Создаем пользователя web, даем ему права и сохраняем:
+```
+CREATE USER 'web'@'localhost' IDENTIFIED BY 'P@ssw0rd';
+CREATE USER 'web'@'127.0.0.1' IDENTIFIED BY 'P@ssw0rd';
+CREATE USER 'web'@'%' IDENTIFIED BY 'P@ssw0rd';
+GRANT ALL PRIVILEGES ON webdb.* TO 'web'@'localhost';
+GRANT ALL PRIVILEGES ON webdb.* TO 'web'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON webdb.* TO 'web'@'%';
+FLUSH PRIVILEGES;
+```
+Проверяем:
+```
+SHOW DATABASES;
+SELECT User, Host FROM mysql.user;
+```
+
+<img width="503" height="453" alt="image" src="https://github.com/user-attachments/assets/9c609207-9433-4578-8680-f0d7a24c61ee" />
+
+Выходим:
+```
+EXIT;
+```
+Копируем index.php в директорию Apache:
+```
+cp ~/web/index.php /var/www/html/
+```
+Копируем директорию images:
+```
+cp -r ~/web/images /var/www/html/
+```
+Создаем тестовый phpinfo файл (для проверки):
+```
+echo "<?php phpinfo(); ?>" > /var/www/html/info.php
+```
+Устанавливаем правильные права:
+```
+chown -R apache:apache /var/www/html/
+chmod -R 755 /var/www/html/
+```
+Включаем модуль rewrite (если нужен):
+```
+a2enmod rewrite
+```
+Перезапускаем апач:
+```
+systemctl restart httpd2
+systemctl status httpd2
+```
+Проверяем index.php:
+```
+cat /var/www/html/index.php | grep -A 9 "Database connection"
+```
+
+<img width="711" height="196" alt="image" src="https://github.com/user-attachments/assets/1313a211-6bfe-4687-9101-36a39c7f770b" />
+
+
+</details>
+ 
