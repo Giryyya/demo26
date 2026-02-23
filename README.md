@@ -1583,104 +1583,24 @@ ls -la ~/web/
 umount /mnt/iso
 ```
 ### Если ISO нет:
-Создаем структуру:
+Создаем директорию:
 ```
 mkdir -p ~/web
 cd ~/web
 ```
-Создаем index.php командой:
+Создаем dump.sql (дамп базы данных) командой:
 ```
-cat > index.php << 'EOF'
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Test Application on HQ-SRV</title>
-    <style>
-        body { font-family: Arial; margin: 40px; }
-        .success { color: green; }
-        .error { color: red; }
-        img { max-width: 300px; margin: 10px; }
-    </style>
-</head>
-<body>
-    <h1>Test Application on HQ-SRV (192.168.2.14)</h1>
-    
-    <?php
-    // Database connection parameters
-    $host = 'localhost';
-    $dbname = 'webdb';
-    $user = 'web';
-    $pass = 'P@ssw0rd';
-    
-    echo "<h2>Server Information:</h2>";
-    echo "<pre>";
-    echo "Hostname: " . gethostname() . "\n";
-    echo "Server IP: 192.168.2.14\n";
-    echo "Date: " . date('Y-m-d H:i:s') . "\n";
-    echo "PHP Version: " . phpversion() . "\n";
-    echo "</pre>";
-    
-    // Test database connection
-    echo "<h2>Database Connection:</h2>";
-    try {
-        $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $pass);
-        echo "<p class='success'>Connected to MariaDB successfully!</p>";
-        
-        // Show some data from database
-        $stmt = $pdo->query("SHOW TABLES");
-        $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
-        echo "<h3>Tables in database:</h3>";
-        echo "<ul>";
-        foreach ($tables as $table) {
-            echo "<li>$table</li>";
-        }
-        echo "</ul>";
-        
-    } catch (PDOException $e) {
-        echo "<p class='error'>Connection failed: " . $e->getMessage() . "</p>";
-    }
-    ?>
-    
-    <h2>Images:</h2>
-    <div>
-        <?php
-        $image_dir = 'images';
-        if (is_dir($image_dir)) {
-            $images = glob($image_dir . "/*.{jpg,jpeg,png,gif}", GLOB_BRACE);
-            foreach ($images as $image) {
-                echo "<img src='$image' alt='Image'>";
-            }
-        } else {
-            echo "<p>Images directory not found</p>";
-        }
-        ?>
-    </div>
-</body>
-</html>
-EOF
-```
-Создаем тестовое изображение:
-```
-mkdir -p images
-echo "This is a test image" > images/test.txt
-```
-Создаем dump.sql командой:
-```
-cat > dump.sql << 'EOF'
--- Create database
+cat > ~/web/dump.sql << 'EOF'
 CREATE DATABASE IF NOT EXISTS webdb;
 USE webdb;
 
--- Create users table
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
-    email VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create products table
 CREATE TABLE IF NOT EXISTS products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -1689,7 +1609,12 @@ CREATE TABLE IF NOT EXISTS products (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert sample data
+CREATE TABLE IF NOT EXISTS test (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    message VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 INSERT INTO users (username, email) VALUES
     ('admin', 'admin@example.com'),
     ('user1', 'user1@example.com'),
@@ -1700,130 +1625,304 @@ INSERT INTO products (name, price, description) VALUES
     ('Product 2', 29.99, 'Second test product'),
     ('Product 3', 39.99, 'Third test product');
 
--- Create a test table for the application
-CREATE TABLE IF NOT EXISTS test (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    message VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 INSERT INTO test (message) VALUES
     ('Hello from HQ-SRV!'),
-    ('Database is working'),
+    ('Database connection successful'),
     ('Test entry 3');
 EOF
 ```
-Устанавливаем Apache, MariaDB, PHP:
+Создание Index.php(главная страница приложения) командой:
+```
+cat > ~/web/index.php << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Application on HQ-SRV</title>
+    <style>
+        body { font-family: Arial; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; }
+        .success { color: #4CAF50; font-weight: bold; }
+        .error { color: #f44336; font-weight: bold; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #4CAF50; color: white; }
+        img { max-width: 200px; margin: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .info { background: #e3f2fd; padding: 10px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Web Application on HQ-SRV (192.168.1.62)</h1>
+        
+        <div class="info">
+            <h3>Server Information:</h3>
+            <p><strong>Hostname:</strong> <?php echo gethostname(); ?></p>
+            <p><strong>Server IP:</strong> 192.168.1.62</p>
+            <p><strong>Date:</strong> <?php echo date('Y-m-d H:i:s'); ?></p>
+            <p><strong>PHP Version:</strong> <?php echo phpversion(); ?></p>
+        </div>
+        
+        <h2>Database Connection</h2>
+        <?php
+        $host = 'localhost';
+        $dbname = 'webdb';
+        $user = 'web';
+        $pass = 'P@ssw0rd';
+        
+        try {
+            $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $pass);
+            echo "<p class='success'>✓ Connected to MariaDB successfully!</p>";
+            
+            // Show tables
+            $stmt = $pdo->query("SHOW TABLES");
+            $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            if (count($tables) > 0) {
+                echo "<h3>Tables in database:</h3>";
+                echo "<table><tr><th>Table Name</th></tr>";
+                foreach ($tables as $table) {
+                    echo "<tr><td>$table</td></tr>";
+                }
+                echo "</table>";
+                
+                // Show data from test table
+                $stmt = $pdo->query("SELECT * FROM test ORDER BY created_at DESC LIMIT 5");
+                $data = $stmt->fetchAll();
+                
+                if (count($data) > 0) {
+                    echo "<h3>Recent test entries:</h3>";
+                    echo "<table><tr><th>ID</th><th>Message</th><th>Created</th></tr>";
+                    foreach ($data as $row) {
+                        echo "<tr><td>{$row['id']}</td><td>{$row['message']}</td><td>{$row['created_at']}</td></tr>";
+                    }
+                    echo "</table>";
+                }
+            }
+        } catch (PDOException $e) {
+            echo "<p class='error'>✗ Connection failed: " . $e->getMessage() . "</p>";
+        }
+        ?>
+        
+        <h2>Images Gallery</h2>
+        <div>
+            <?php
+            $image_dir = 'images';
+            if (is_dir($image_dir)) {
+                $images = glob($image_dir . "/*.{jpg,jpeg,png,gif}", GLOB_BRACE);
+                if (count($images) > 0) {
+                    foreach ($images as $image) {
+                        echo "<img src='$image' alt='Gallery image'>";
+                    }
+                } else {
+                    echo "<p>No images found. Creating sample images...</p>";
+                    mkdir($image_dir, 0755, true);
+                }
+            } else {
+                echo "<p>Creating images directory...</p>";
+                mkdir($image_dir, 0755, true);
+            }
+            ?>
+        </div>
+    </div>
+</body>
+</html>
+EOF
+```
+Создаем директорию Image и файлы в ней:
+```
+mkdir -p ~/web/images
+echo "Sample image 1" > ~/web/images/image1.txt
+echo "Sample image 2" > ~/web/images/image2.txt
+```
+Устанавливаем необходимое ПО:
 ```
 apt-get update
 apt-get install apache2 -y
 apt-get install mariadb-server mariadb-client -y
-apt-get install php8.2 php8.2-mysqli php8.2-mysqlnd -y
-apt-get install php8.2-pdo php8.2-mbstring php8.2-curl php8.2-json apache2-mod_php8.2 -y
-```
-Создаем символические ссылки из available в enabled:
-```
-ln -sf /etc/httpd2/conf/mods-available/mod_php8.2.load /etc/httpd2/conf/mods-enabled/
-ln -sf /etc/httpd2/conf/mods-available/mod_php8.2.conf /etc/httpd2/conf/mods-enabled/
-```
-Проверяем результат:
-```
-ls -la /etc/httpd2/conf/mods-enabled/ | grep php
-httpd2 -t
-```
-Перезапускаем апач:
-```
-systemctl restart httpd2
-```
-
-<img width="1033" height="105" alt="image" src="https://github.com/user-attachments/assets/bad138e0-bba0-4865-9b78-dfead29a1499" />
-
-Проверяем версии:
-```
-httpd2 -v
-mysql --version
-php -v
+apt-get install php8.2 php8.2-mysqli php8.2-mysqlnd apache2-mod_php8.2 -y
+apt-get install php8.2-pdo php8.2-pdo_mysql -y
 ```
 Запускаем MariaDB:
 ```
 systemctl enable --now mariadb
 ```
-Настраиваем MariaDB:
+Настраиваем безопасность:
 ```
 mysql_secure_installation
 ```
 Ответы:
-
-<img width="689" height="584" alt="image" src="https://github.com/user-attachments/assets/fe3152b1-4484-4bd4-bdb3-96a0ba0838ad" />
-
-Подключаемся к MariaDB:
+```
+Enter current password for root: [Enter] (просто нажать Enter)
+Switch to unix_socket authentication: n
+Change the root password? n (или y если хотите установить пароль)
+Remove anonymous users? y
+Disallow root login remotely? y
+Remove test database and access to it? y
+Reload privilege tables now? y
+```
+Заходим в MySql:
 ```
 mysql -u root -p
 ```
-Создаем БД:
+Настраиваем БД:
 ```
 CREATE DATABASE IF NOT EXISTS webdb;
 USE webdb;
-```
-Импортируем дамп:
-```
 SOURCE /root/web/dump.sql;
-```
-Создаем пользователя web, даем ему права и сохраняем:
-```
 CREATE USER 'web'@'localhost' IDENTIFIED BY 'P@ssw0rd';
-CREATE USER 'web'@'127.0.0.1' IDENTIFIED BY 'P@ssw0rd';
-CREATE USER 'web'@'%' IDENTIFIED BY 'P@ssw0rd';
 GRANT ALL PRIVILEGES ON webdb.* TO 'web'@'localhost';
-GRANT ALL PRIVILEGES ON webdb.* TO 'web'@'127.0.0.1';
-GRANT ALL PRIVILEGES ON webdb.* TO 'web'@'%';
 FLUSH PRIVILEGES;
-```
-Проверяем:
-```
 SHOW DATABASES;
-SELECT User, Host FROM mysql.user;
-```
-
-<img width="503" height="453" alt="image" src="https://github.com/user-attachments/assets/9c609207-9433-4578-8680-f0d7a24c61ee" />
-
-Выходим:
-```
+SELECT User, Host FROM mysql.user WHERE User='web';
+SHOW TABLES;
+SELECT * FROM test;
 EXIT;
 ```
-Копируем index.php в директорию Apache:
+Вывод:
+
+<img width="570" height="662" alt="image" src="https://github.com/user-attachments/assets/0484765a-03b8-400b-8bb9-cb5a5a29ade6" />
+
+Проверяем, что пользователь web может подключиться:
 ```
-cp ~/web/index.php /var/www/html/
+mysql -u web -p'P@ssw0rd' -e "SHOW DATABASES;"
+mysql -u web -p'P@ssw0rd' -D webdb -e "SHOW TABLES;"
 ```
-Копируем директорию images:
+
+<img width="612" height="262" alt="image" src="https://github.com/user-attachments/assets/a40681bd-88e6-4f84-9571-c1d49af64204" />
+
+Настраиваем апач, Проверяем текущий DocumentRoot:
 ```
-cp -r ~/web/images /var/www/html/
+httpd2 -S | grep -i "documentroot"
 ```
-Создаем тестовый phpinfo файл (для проверки):
+
+<img width="1034" height="54" alt="image" src="https://github.com/user-attachments/assets/751ecc0f-6ac9-408c-8729-84c217476130" />
+
+Создаем директорию htdocs (если её нет) и копируем туда файлы для приложения:
 ```
-echo "<?php phpinfo(); ?>" > /var/www/html/info.php
+mkdir -p /etc/httpd2/htdocs
+cp /root/web/index.php /etc/httpd2/htdocs/
+cp -r /root/web/images /etc/httpd2/htdocs/
+echo "<?php phpinfo(); ?>" > /etc/httpd2/htdocs/info.php
+echo "<?php echo 'OK'; ?>" > /etc/httpd2/htdocs/simple.php
 ```
-Устанавливаем правильные права:
+Устанавливаем владельца и права:
 ```
-chown -R apache:apache /var/www/html/
-chmod -R 755 /var/www/html/
+chown -R apache:apache /etc/httpd2/htdocs/
+find /etc/httpd2/htdocs/ -type d -exec chmod 755 {} \;
+find /etc/httpd2/htdocs/ -type f -exec chmod 644 {} \;
 ```
-Включаем модуль rewrite (если нужен):
+Проверяем наличие модуля PHP в Apache:
 ```
-a2enmod rewrite
+ls -la /etc/httpd2/conf/mods-available/ | grep php
 ```
-Перезапускаем апач:
+
+<img width="682" height="67" alt="image" src="https://github.com/user-attachments/assets/d48694e1-01e6-4fed-971d-61571d91e86f" />
+
+Включаем модуль (создаем симлинки):
+```
+ln -sf /etc/httpd2/conf/mods-available/mod_php8.2.load /etc/httpd2/conf/mods-enabled/
+ln -sf /etc/httpd2/conf/mods-available/mod_php8.2.conf /etc/httpd2/conf/mods-enabled/
+```
+Проверяем активные конфиги:
+```
+ls -la /etc/httpd2/conf/sites-enabled/
+```
+
+<img width="910" height="127" alt="image" src="https://github.com/user-attachments/assets/c2d4c6b8-5453-48cb-a4ed-10e4d514a8a9" />
+
+Редактируем основной конфиг:
+```
+vim /etc/httpd2/conf/sites-available/default.conf
+```
+```
+DocumentRoot /etc/httpd2/htdocs
+<Directory /etc/httpd2/htdocs>
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+</Directory>
+```
+
+<img width="907" height="578" alt="image" src="https://github.com/user-attachments/assets/8dfbd5b4-c3a4-4467-bf47-87fb37eb9ff3" />
+
+Проверяем конфигурацию:
+```
+httpd2 -t
+```
+Если Syntax OK, перезапускаем:
 ```
 systemctl restart httpd2
-systemctl status httpd2
 ```
-Проверяем index.php:
+Проверяем статус:
 ```
-cat /var/www/html/index.php | grep -A 9 "Database connection"
+systemctl status httpd2 --no-pager | head -10
+```
+### Все дальнейшие проверки можно через браузер делать
+Проверяем простой PHP файл (Должны увидеть: OK):
+```
+curl http://localhost/simple.php
+```
+Проверяем информацию о PHP:
+```
+curl http://localhost/info.php | head -20
+```
+Создадим тестовый файл для проверки БД:
+```
+cat > /etc/httpd2/htdocs/db-test.php << 'EOF'
+<?php
+$host = 'localhost';
+$dbname = 'webdb';
+$user = 'web';
+$pass = 'P@ssw0rd';
+
+echo "<h1>Database Connection Test</h1>";
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $user, $pass);
+    echo "<p style='color:green'>✓ Connected to database successfully!</p>";
+    
+    $stmt = $pdo->query("SELECT VERSION()");
+    $version = $stmt->fetch();
+    echo "<p>MySQL Version: " . $version[0] . "</p>";
+    
+    $stmt = $pdo->query("SHOW TABLES");
+    echo "<h3>Tables:</h3><ul>";
+    while ($row = $stmt->fetch()) {
+        echo "<li>" . $row[0] . "</li>";
+    }
+    echo "</ul>";
+    
+} catch (PDOException $e) {
+    echo "<p style='color:red'>✗ Connection failed: " . $e->getMessage() . "</p>";
+}
+?>
+EOF
+
+chown apache:apache /etc/httpd2/htdocs/db-test.php
+```
+Проверим его:
+```
+curl http://localhost/db-test.php
+```
+Настраиваем Iptables (под вопросом насколько нужно):
+```
+iptables -I INPUT -p tcp --dport 80 -j ACCEPT
+mkdir /etc/iptables
+iptables-save > /etc/iptables/rules.v4
 ```
 
-<img width="711" height="196" alt="image" src="https://github.com/user-attachments/assets/1313a211-6bfe-4687-9101-36a39c7f770b" />
+### По итогу должно получиться следующее (на других узлах тоже должно работать):
 
+<img width="1716" height="920" alt="image" src="https://github.com/user-attachments/assets/421813e1-f0a5-48cb-af14-ac494d56d56b" />
+
+<img width="1718" height="916" alt="image" src="https://github.com/user-attachments/assets/6be2eb0b-f86e-4b69-98ea-c04f2885035f" />
+
+<img width="1716" height="914" alt="image" src="https://github.com/user-attachments/assets/b3d37a35-86f7-4527-aca4-33c7a8b7feea" />
+
+<img width="1718" height="915" alt="image" src="https://github.com/user-attachments/assets/53d0f0dd-c17f-46b0-a9cc-4db720fe7384" />
+
+<img width="1718" height="960" alt="image" src="https://github.com/user-attachments/assets/f60a68a0-f17d-4dec-bc94-1797fd39652a" />
 
 </details>
  
