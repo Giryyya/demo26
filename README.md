@@ -1,4 +1,4 @@
-<img width="689" height="584" alt="image" src="https://github.com/user-attachments/assets/fe3152b1-4484-4bd4-bdb3-96a0ba0838ad" /># Информация по сети
+# Информация по сети
 ### Схема сети:
 
  <details>
@@ -37,7 +37,9 @@
 ## Произведите базовую настройку устройств
  <details>
     <summary>НАЖМИ</summary>
-   
+
+ ## ПОД РУТА ПРОВАЛИВАЕМСЯ ТОЛЬКО КОМАНДОЙ sudo -i ИЛИ sudo su - (это аналог команды, только в виде связки команд), ЕСЛИ ОНА НЕ РАБОТАЕТ, ТО ЗАХОДИМ ПОД НЕГО ЧЕРЕЗ tty2 (ctrl+alt+f2)
+ 
 • Настройте имена устройств согласно топологии. Используйте полное 
 доменное имя
 ```
@@ -1752,7 +1754,7 @@ mysql_secure_installation
 ```
 Ответы:
 
-<img width="689" height="584" alt="image" src="https://github.com/user-attachments/assets/20c87c6e-3af5-4f57-8ec9-908ec50cb65c" />
+<img width="689" height="584" alt="image" src="https://github.com/user-attachments/assets/fe3152b1-4484-4bd4-bdb3-96a0ba0838ad" />
 
 Подключаемся к MariaDB:
 ```
