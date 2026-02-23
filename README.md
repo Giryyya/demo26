@@ -1457,9 +1457,11 @@ docker compose up -d testapp
 
 <img width="1704" height="133" alt="image" src="https://github.com/user-attachments/assets/c45fcc5d-cebd-44d7-8827-871d57d0e686" />
 
-Смотрим чем занят порт и убиваем процесс:
+Смотрим чем занят порт и убиваем процесс (и желательно выключить службу которая занимает порт, иначе при перезагрузке ничего не заработает):
 ```
+netstat -tulpn | grep 8080
 ss -tulpn | grep 8080
+lsof -i :8080
 kill -9 2847
 ```
 
@@ -1493,18 +1495,25 @@ docker compose ps
 ```
 iptables -F
 iptables -X
-iptables -P INPUT DROP
-iptables -P FORWARD DROP
+iptables -t nat -F
+iptables -t nat -X
+iptables -t mangle -F
+iptables -t mangle -X
+iptables -P INPUT ACCEPT
+iptables -P FORWARD ACCEPT
 iptables -P OUTPUT ACCEPT
 iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -p icmp -j ACCEPT
 iptables -A INPUT -i lo -j ACCEPT
-iptables -A INPUT -p tcp --dport 22 -j ACCEPT
-iptables -A INPUT -p tcp --dport 2026 -j ACCEPT
-iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
-iptables -A INPUT -p tcp --dport 8081 -j ACCEPT
-iptables -A INPUT -p tcp --dport 3306 -j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT   # SSH
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT   # HTTP
+iptables -A INPUT -p tcp --dport 443 -j ACCEPT  # HTTPS
+iptables -A INPUT -p tcp --dport 8080 -j ACCEPT # Ваше приложение
+iptables -A INPUT -p tcp --dport 3306 -j ACCEPT # MySQL/MariaDB
+iptables-save > /etc/sysconfig/iptables
 mkdir /etc/iptables
 iptables-save > /etc/iptables/rules.v4
+iptables -L -n -v
 ```
 Перезапускаем Docker и проверяем правила:
 ```
