@@ -1935,3 +1935,41 @@ iptables-save > /etc/iptables/rules.v4
 
 </details>
  
+##  На маршрутизаторах сконфигурируйте статическую трансляцию портов
+
+<details>
+    <summary>ЗАДАНИЕ</summary>
+ 
+• Пробросьте порт 8080в порт приложения testapp BR-SRV на маршрутизаторе BR-RTR, для обеспечения работы приложения testapp извне
+
+• Пробросьте порт 8080в порт веб приложения на HQ-SRV на маршрутизаторе HQ-RTR, для обеспечения работы веб приложения извне 
+
+• Пробросьте порт 2026на маршрутизаторе HQ-RTR в порт 2026сервера HQ-SRV, для подключения к серверу по протоколу ssh из внешних сетей 
+
+• Пробросьте порт 2026на маршрутизаторе BR-RTR в порт 2026сервера BR-SRV, для подключения к серверу по протоколу ssh из внешних сетей.
+
+ </details>
+
+<details>
+    <summary>НАЖМИ</summary>
+
+На BR-RTR:
+```
+iptables -t nat -A PREROUTING -i ens33-p tcp --dport 8080 -j DNAT --to-destination 192.168.2.14:8080
+iptables -t nat -A PREROUTING -i ens33 -p tcp --dport 2026 -j DNAT --to-destination 192.168.2.14:2026
+sysctl -p iptables-save > /etc/iptables/rules.v4
+```
+На HQ-RTR:
+```
+iptables -t nat -A PREROUTING -i ens33-p tcp --dport 8080 -j DNAT --to-destination 192.168.2.62:8080
+iptables -t nat -A PREROUTING -i ens33 -p tcp --dport 2026 -j DNAT --to-destination 192.168.1.62:2026
+sysctl -p
+ iptables-save > /etc/iptables/rules.v4
+```
+Проверяем ssh на HQ-CLI (должны подключиться к BR-SRV):
+```
+ssh -p 2026 sshuser@172.16.2.2
+```
+
+
+ </details>
