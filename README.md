@@ -2417,3 +2417,140 @@ chmod +x /root/delete_users.sh
 ```
 
 </details>
+
+## Выполните настройку центра сертификации на базе HQ-SRV
+
+<details>
+    <summary>ЗАДАНИЕ</summary>
+
+Необходимо использовать отечественные алгоритмы шифрования 
+
+• Сертификаты выдаются на 30дней 
+
+• Обеспечьте доверие сертификату для HQ-CLI 
+
+• Выдайте сертификаты веб серверам 
+
+• Перенастройте ранее настроенный реверсивный прокси nginx на протокол https 
+
+• При обращении к веб серверам https://web.au-team.irpo и https://docker.au-team.irpo у браузера клиента не должно возникать предупреждений.
+
+ </details>
+
+ <details>
+    <summary>НАЖМИ</summary>
+  
+Создаем структуру CA в домашней директории:
+```
+cd ~
+mkdir -p ~/ca/{certs,crl,newcerts,private}
+chmod 700 ~/ca/private
+touch ~/ca/index.txt
+echo 1000 > ~/ca/serial
+```
+Редачим конфиг /var/lib/ssl/openssl.cnf:
+```
+
+<img width="663" height="892" alt="image" src="https://github.com/user-attachments/assets/1d5eab13-0e47-4855-8481-efd711c2d501" />
+
+<img width="704" height="835" alt="image" src="https://github.com/user-attachments/assets/660ab021-aa65-46e3-b3c7-f3842010b084" />
+
+Проверяем конфиг:
+```
+openssl version -d
+openssl ciphers -v
+```
+Создаем и проверяем корневой сертификат СА (вводить построчно):
+```
+cd ~/ca
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 \
+  -out private/ca.key.pem
+chmod 400 private/ca.key.pem
+
+openssl req -x509 -new -key private/ca.key.pem \
+  -days 30 -sha256 \
+  -subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=HQ-CA/emailAddress=admin@au.team" \
+  -out certs/ca.cert.pem
+  
+openssl x509 -in certs/ca.cert.pem -text -noout | grep -E "Issuer:|Subject:|Not Before|Not After"
+```
+Создаем сертификаты для HQ-SRV и BR-SRV (вводить построчно):
+```
+cd ~/ca
+
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 \
+  -out private/web.au.team.key.pem
+chmod 400 private/web.au.team.key.pem
+
+openssl req -new -key private/web.au.team.key.pem \
+  -subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=web.au.team/emailAddress=admin@au.team" \
+  -out web.au.team.csr
+
+openssl x509 -req -in web.au.team.csr \
+  -CA certs/ca.cert.pem -CAkey private/ca.key.pem \
+  -CAcreateserial -out certs/web.au.team.cert.pem \
+  -days 30 -sha256
+
+openssl verify -CAfile certs/ca.cert.pem certs/web.au.team.cert.pem
+
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 \
+  -out private/docker.au.team.key.pem
+chmod 400 private/docker.au.team.key.pem
+
+openssl req -new -key private/docker.au.team.key.pem \
+  -subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=docker.au.team/emailAddress=admin@au.team" \
+  -out docker.au.team.csr
+
+openssl x509 -req -in docker.au.team.csr \
+  -CA certs/ca.cert.pem -CAkey private/ca.key.pem \
+  -CAcreateserial -out certs/docker.au.team.cert.pem \
+  -days 30 -sha256
+
+openssl verify -CAfile certs/ca.cert.pem certs/docker.au.team.cert.pem
+```
+Устанавливаем сертификат на HQ-SRV:
+```
+mkdir -p /etc/apache2/ssl
+cp ~/ca/certs/web.au.team.cert.pem /etc/apache2/ssl/
+cp ~/ca/private/web.au.team.key.pem /etc/apache2/ssl/
+cp ~/ca/certs/ca.cert.pem /etc/apache2/ssl/
+a2enmod ssl
+```
+Подгатавливаем и отправляем архивы для BR-SRV и HQ-RTR:
+```
+cd ~/ca
+tar -czf docker_certs.tar.gz certs/docker.au.team.cert.pem private/docker.au.team.key.pem certs/ca.cert.pem
+scp -P 2026 docker_certs.tar.gz sshuser@192.168.2.14:/tmp/
+tar -czf hq-rtr_certs.tar.gz certs/ca.cert.pem
+scp -P 2026 hq-rtr_certs.tar.gz sshuser@192.168.1.1:/tmp/
+cp /root/ca/certs/web.au.team.cert.pem /home/sshuser/
+cp /root/ca/private/web.au.team.key.pem /home/sshuser/
+chown sshuser:sshuser /home/sshuser/*.pem
+```
+На BR-SRV распаковываем:
+```
+cd /tmp
+tar -xzf docker_certs.tar.gz
+mkdir -p /etc/nginx/ssl
+cp certs/docker.au.team.cert.pem /etc/nginx/ssl/
+cp certs/ca.cert.pem /etc/nginx/ssl/
+cp private/docker.au.team.key.pem /etc/nginx/ssl/
+chmod 644 /etc/nginx/ssl/*.pem
+chmod 600 /etc/nginx/ssl/docker.au.team.key.pem
+ls -la /etc/nginx/ssl/
+```
+На HQ-RTR распаковываем:
+```
+cd /tmp
+tar -xzf hq-rtr_certs.tar.gz
+mkdir -p /etc/nginx/ssl
+cp certs/ca.cert.pem /etc/nginx/ssl/
+scp -P 2026 sshuser@192.168.1.62:/home/sshuser/web.au.team.cert.pem /tmp/
+scp -P 2026 sshuser@192.168.1.62:/home/sshuser/web.au.team.key.pem /tmp/
+cp /tmp/web.au.team.cert.pem /etc/nginx/ssl/
+cp /tmp/web.au.team.key.pem /etc/nginx/ssl/
+```
+На HQ-RTR редактируем nginx /etc/nginx/nginx.conf:
+```
+
+ </details>
