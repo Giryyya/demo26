@@ -2614,5 +2614,16 @@ server {
 cp ~/ca/certs/ca.cert.pem ~/ca/certs/CA-HQ.crt
 scp -P 2026 ~/ca/certs/CA-HQ.crt sshuser@192.168.1.3:/tmp/
 ```
+Получаем сертификат на HQ-CLI:
+```
+cp /tmp/CA-HQ.crt /etc/pki/ca-trust/source/anchors/
+update-ca-trust
+```
+Проверяем:
+```
+curl -I https://web.au.team
+curl -I https://docker.au.team
+openssl s_client -connect web.au.team:443 -showcerts < /dev/null 2>/dev/null | openssl x509 -text | grep -E "Issuer:|Subject:|Not Before|Not After"
+```
 
  </details>
