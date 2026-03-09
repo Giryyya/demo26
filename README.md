@@ -523,7 +523,7 @@ no ip ospf network broadcast
 no ip ospf passive
 ip ospf authentication
 ip ospf authentication-key password
-exi:
+exit
 ```
 Не забываем сохранить изменения (как в циске):
 ```
