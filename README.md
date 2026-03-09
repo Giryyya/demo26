@@ -2454,7 +2454,7 @@ echo 1000 > ~/ca/serial
 <img width="663" height="892" alt="image" src="https://github.com/user-attachments/assets/1d5eab13-0e47-4855-8481-efd711c2d501" />
 
 <img width="704" height="835" alt="image" src="https://github.com/user-attachments/assets/660ab021-aa65-46e3-b3c7-f3842010b084" />
-
+```
 Проверяем конфиг:
 ```
 openssl version -d
@@ -2525,6 +2525,8 @@ tar -czf hq-rtr_certs.tar.gz certs/ca.cert.pem
 scp -P 2026 hq-rtr_certs.tar.gz sshuser@192.168.1.1:/tmp/
 cp /root/ca/certs/web.au.team.cert.pem /home/sshuser/
 cp /root/ca/private/web.au.team.key.pem /home/sshuser/
+cp /root/ca/certs/docker.au.team.cert.pem /home/sshuser/
+cp /root/ca/private/docker.au.team.key.pem /home/sshuser/
 chown sshuser:sshuser /home/sshuser/*.pem
 ```
 На BR-SRV распаковываем:
@@ -2547,10 +2549,70 @@ mkdir -p /etc/nginx/ssl
 cp certs/ca.cert.pem /etc/nginx/ssl/
 scp -P 2026 sshuser@192.168.1.62:/home/sshuser/web.au.team.cert.pem /tmp/
 scp -P 2026 sshuser@192.168.1.62:/home/sshuser/web.au.team.key.pem /tmp/
+scp -P 2026 sshuser@192.168.1.62:/home/sshuser/docker.au.team.cert.pem /tmp/
+scp -P 2026 sshuser@192.168.1.62:/home/sshuser/docker.au.team.key.pem /tmp/
 cp /tmp/web.au.team.cert.pem /etc/nginx/ssl/
 cp /tmp/web.au.team.key.pem /etc/nginx/ssl/
+cp /tmp/docker.au.team.cert.pem /etc/nginx/ssl/
+cp /tmp/web.docker.team.key.pem /etc/nginx/ssl/
 ```
 На HQ-RTR редактируем nginx /etc/nginx/nginx.conf:
+```
+server {
+    listen 80;
+    server_name web.au.team;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name web.au.team;
+    
+    ssl_certificate /etc/nginx/ssl/web.au.team.cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/web.au.team.key.pem;
+    ssl_trusted_certificate /etc/nginx/ssl/ca.cert.pem;
+    
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    
+    location / {
+        proxy_pass http://192.168.1.62:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+server {
+    listen 80;
+    server_name docker.au.team;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name docker.au.team;
+    
+    ssl_certificate /etc/nginx/ssl/docker.au.team.cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/docker.au.team.key.pem;
+    ssl_trusted_certificate /etc/nginx/ssl/ca.cert.pem;
+    
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    
+    location / {
+        proxy_pass http://192.168.2.14:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+Устанавливаем доверие на HQ-CLI:
+```
+cp ~/ca/certs/ca.cert.pem ~/ca/certs/CA-HQ.crt
+scp -P 2026 ~/ca/certs/CA-HQ.crt sshuser@192.168.1.3:/tmp/
 ```
 
  </details>
