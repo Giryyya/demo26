@@ -2750,4 +2750,6 @@ systemctl status strongswan-starter
 ipsec status
 ```
 
+<img width="816" height="88" alt="image" src="https://github.com/user-attachments/assets/6b437d94-946f-444d-92e0-7c7210086f83" />
+
  </details>
