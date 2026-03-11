@@ -2627,3 +2627,127 @@ openssl s_client -connect web.au.team:443 -showcerts < /dev/null 2>/dev/null | o
 ```
 
  </details>
+
+## Перенастройте ip-туннель с базового до уровня туннеля, обеспечивающего шифрование трафика 
+
+<details>
+    <summary>ЗАДАНИЕ</summary>
+
+Настройте защищенный туннель между HQ-RTR и BR-RTR 
+
+• Внесите необходимые изменения в конфигурацию динамической маршрутизации, протокол динамической маршрутизации должен возобновить работу после перенастройки туннеля 
+
+• Выбранное программное обеспечение, обоснование его выбора и его основные параметры, изменения в конфигурации динамической маршрутизации отметьте в отчёте.
+
+ </details>
+
+ <details>
+    <summary>НАЖМИ</summary>
+
+Устанавливаем Strongswan:
+```
+apt-get install strongswan
+```
+Редачим конфиг /etc/strongswan/ipsec.conf:
+### HQ-RTR
+```
+config setup
+    charondebug="ike 2, knl 2, cfg 2"
+
+conn gre-tunnel
+    left=172.16.1.2
+    leftid=172.16.1.2
+    right=172.16.2.2
+    rightid=172.16.2.2
+    type=transport
+    keyexchange=ikev2
+    authby=secret
+    esp=aes256-sha256-modp2048
+    ikelifetime=24h
+    lifetime=8h
+    dpddelay=10s
+    dpdtimeout=30s
+    dpdaction=restart
+    auto=start
+```
+### BR-RTR:
+```
+config setup
+    charondebug="ike 2, knl 2, cfg 2"
+
+conn gre-tunnel
+    left=172.16.2.2
+    leftid=172.16.2.2
+    right=172.16.1.2
+    rightid=172.16.1.2
+    type=transport
+    keyexchange=ikev2
+    authby=secret
+    esp=aes256-sha256-modp2048
+    ikelifetime=24h
+    lifetime=8h
+    dpddelay=10s
+    dpdtimeout=30s
+    dpdaction=restart
+    auto=start
+```
+Создаем файл с ключом на обоих роутерах:
+```
+: PSK "very_strong_secret_key_change_this_123456"
+```
+Добавляем строчку в файл /etc/strongswan/ipsec.secrets:
+```
+172.16.1.2 172.16.2.2 : PSK "TestPassword123"
+```
+Изменяем права к файлу:
+```
+chmod 600 /etc/strongswan/ipsec.secrets
+chown root:root /etc/strongswan/ipsec.secrets
+```
+Настраиваем Iptables на обоих роутерах:
+```
+iptables -I INPUT -i ens33 -p gre -j ACCEPT
+iptables -I OUTPUT -o ens33 -p gre -j ACCEPT
+iptables -I INPUT -i ens33 -p udp --dport 500 -j ACCEPT
+iptables -I INPUT -i ens33 -p udp --dport 4500 -j ACCEPT
+iptables -I INPUT -i ens33 -p esp -j ACCEPT
+iptables -I INPUT -i ens33 -p ah -j ACCEPT
+iptables-save > /etc/iptables/rules.v4
+```
+Настраиваем OSPF:
+### HQ-RTR:
+```
+vtysh
+configure terminal
+interface tun1
+ ip ospf network point-to-point
+ ip ospf hello-interval 10
+ ip ospf dead-interval 40
+router ospf
+ network 10.10.10.0/30 area 0
+ network 192.168.1.0/26 area 0
+do wr
+```
+### BR-RTR:
+```
+vtysh
+configure terminal
+interface tun1
+ ip ospf network point-to-point
+ ip ospf hello-interval 10
+ ip ospf dead-interval 40
+router ospf
+ network 10.10.10.0/30 area 0
+ network 192.168.2.0/28 area 0
+do wr
+```
+Перезапускаем сервисы и проверяем:
+```
+systemctl restart frr
+systemctl enable strongswan-starter
+systemctl start strongswan-starter
+systemctl status strongswan-starter
+ipsec status
+```
+
+ </details>
