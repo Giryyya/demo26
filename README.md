@@ -2753,3 +2753,73 @@ ipsec status
 <img width="816" height="88" alt="image" src="https://github.com/user-attachments/assets/6b437d94-946f-444d-92e0-7c7210086f83" />
 
  </details>
+
+## Настройте межсетевой экран на маршрутизаторах HQ-RTR и BR-RTR на сеть в сторону ISP 
+
+<details>
+    <summary>ЗАДАНИЕ</summary>
+
+Обеспечьте работу протоколов http, https, dns, ntp, icmp или дополнительных нужных протоколов 
+
+• Запретите остальные подключения из сети Интернет во внутреннюю сеть.
+
+ </details>
+
+<details>
+    <summary>НАЖМИ</summary>
+
+Настраиваем Iptables на HQ-RTR:
+```
+iptables -F
+iptables -X
+iptables -t nat -F
+iptables -t mangle -F
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+iptables -I INPUT 1 -m conntrack --ctstate INVALID -j DROP
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -i ens37 -p icmp --icmp-type echo-request -j ACCEPT
+iptables -A INPUT -i ens33 -p icmp --icmp-type echo-request -j ACCEPT
+iptables -A INPUT -i ens37 -p tcp --dport 22 -j ACCEPT
+iptables -A INPUT -i ens37 -p tcp --dport 2026 -j ACCEPT
+iptables -A INPUT -i tun1 -p 89 -j ACCEPT
+iptables -A INPUT -i tun1 -p icmp --icmp-type echo-request -j ACCEPT
+iptables -I FORWARD 1 -m conntrack --ctstate INVALID -j DROP
+iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i ens37 -o tun1 -j ACCEPT
+iptables -A FORWARD -i tun1 -o ens37 -j ACCEPT
+iptables -A FORWARD -i ens37 -o ens33 -j ACCEPT
+iptables -A FORWARD -i tun1 -o ens37 -p tcp --dport 80 -d 192.168.1.62 -j ACCEPT
+iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
+iptables-save > /etc/iptables/rules.v4
+```
+Настраиваем Iptables на BR-RTR:
+```
+iptables -F
+iptables -X
+iptables -t nat -F
+iptables -t mangle -F
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+iptables -I INPUT 1 -m conntrack --ctstate INVALID -j DROP
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -i ens37 -p icmp --icmp-type echo-request -j ACCEPT
+iptables -A INPUT -i ens33 -p icmp --icmp-type echo-request -j ACCEPT
+iptables -A INPUT -i ens37 -p tcp --dport 22 -j ACCEPT
+iptables -A INPUT -i ens37 -p tcp --dport 2026 -j ACCEPT
+iptables -A INPUT -i tun1 -p 89 -j ACCEPT
+iptables -A INPUT -i tun1 -p icmp --icmp-type echo-request -j ACCEPT
+iptables -I FORWARD 1 -m conntrack --ctstate INVALID -j DROP
+iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i ens37 -o tun1 -j ACCEPT
+iptables -A FORWARD -i tun1 -o ens37 -j ACCEPT
+iptables -A FORWARD -i ens37 -o ens33 -j ACCEPT
+iptables -A FORWARD -i tun1 -o ens37 -p tcp --dport 8080 -d 192.168.2.14 -j ACCEPT
+iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
+iptables-save > /etc/iptables/rules.v4
+```
+ </details>
