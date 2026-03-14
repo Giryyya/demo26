@@ -2823,3 +2823,46 @@ iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
 iptables-save > /etc/iptables/rules.v4
 ```
  </details>
+
+## Настройте принт-сервер cups на сервере HQ-SRV
+
+<details>
+    <summary>ЗАДАНИЕ</summary>
+
+Опубликуйте виртуальный pdf-принтер 
+
+• На клиенте HQ-CLI подключите виртуальный принтер как принтер по умолчанию.
+
+ </details>
+
+<details>
+    <summary>НАЖМИ</summary>
+
+Устанавливаем cups:
+```
+apt-get update
+apt-get install cups cups-pdf
+```
+Создаем группу и добавляем туда юзера (после этого необходимо перелогиниться):
+```
+groupadd -r lpadmin
+usermod -aG lpadmin $USER
+```
+Проверяем что драйвер доступен:
+```
+lpinfo --make-and-model "PDF" -m
+```
+Настраиваем доступ в консоль и запускаем cups:
+```
+cupsctl --remote-admin
+sudo systemctl restart cups
+sudo systemctl enable cups
+sudo systemctl status cups
+```
+Открываем в браузере (login - root, passwd - toor):
+```
+http://localhost:631/admin
+```
+Жмем:
+
+ </details>
