@@ -2864,5 +2864,68 @@ sudo systemctl status cups
 http://localhost:631/admin
 ```
 Жмем:
+```
+Добавить принтер
+CUPS-PDF (Virtual PDF Printer)
+Название Virtual_PDF
+Расположение hq-srv
+Разрешить совместный доступ
+Создать: Generic
+Модель: Generic CUPS-PDF Printer (w/ options) (en)
+```
+Назначаем принтер по умолчанию:
+```
+lpadmin -d Virtual_PDF
+lpstat -d
+```
+Редактируем /etc/cups/cups-pdf.conf:
+```
+Меняем Out ${DESKTOP} на:
+Out /root/PDF
+```
+Создаем директорию и перезапускаем cups:
+```
+mkdir -p /root/PDF
+chmod 755 /root/PDF
+systemctl restart cups
+```
+Проводим тестовую печать:
+```
+echo "Test print job" > ~/test.txt
+lp -d Virtual_PDF ~/test.txt
+ls -la root/PDF/
+```
+### Должен появится файл test_job.pdf
 
- </details>
+На HQ-CLI устанавливаем cups:
+```
+apt-get update
+apt-get install cups cups-filters cups-pk-helper
+```
+Создаем директорию для печати:
+```
+mkdir -p ~/.cups
+chmod 755 ~/.cups
+echo "ServerName 192.168.1.62" > ~/.cups/client.conf
+chmod 644 ~/.cups/client.conf
+ls -la ~/.cups/
+cat ~/.cups/client.conf
+```
+Проверяем доступность:
+```
+curl -I http://192.168.1.100:631
+lpstat -s
+```
+Устанавливаем как принтер по умолчанию:
+```
+lpoptions -d Virtual_PDF
+lpstat -d
+```
+Проводим тестовую печать:
+```
+echo "Remote print test from HQ-CLI" > ~/remote-test.txt
+lp -d Virtual_PDF ~/remote-test.txt
+lpstat -o
+```
+
+</details>
