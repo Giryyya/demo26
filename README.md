@@ -2927,5 +2927,96 @@ echo "Remote print test from HQ-CLI" > ~/remote-test.txt
 lp -d Virtual_PDF ~/remote-test.txt
 lpstat -o
 ```
+Проверяем что файл появился:
+```
+ls /root/PDF
+```
+### Если не сработало можно попробовать сделать следующее:
+
+HQ-SRV:
+```
+apt-get update
+apt-get install cups cups-pdf
+usermod -aG lpadmin $USER
+sed -i 's|^Out .*|Out /var/spool/cups-pdf/${USER}|' /etc/cups/cups-pdf.conf
+cat > /etc/cups/cupsd.conf << 'EOF'
+Port 631
+Listen 0.0.0.0:631
+<Location />
+  Order allow,deny
+  Allow localhost
+  Allow 192.168.1.0/26
+  AuthType None
+</Location>
+<Location /printers>
+  Order allow,deny
+  Allow localhost
+  Allow 192.168.1.0/26
+  AuthType None
+</Location>
+<Location /printers/Virtual_PDF>
+  Order allow,deny
+  Allow localhost
+  Allow 192.168.1.0/26
+  AuthType None
+</Location>
+EOF
+lpadmin -x Virtual_PDF 2>/dev/null
+lpadmin -p Virtual_PDF -v cups-pdf:/ -E -o printer-is-shared=true
+lpadmin -d Virtual_PDF
+systemctl restart cups
+systemctl enable cups
+systemctl status cups
+lpstat -p Virtual_PDF -d
+```
+На HQ-CLI:
+```
+apt-get update
+apt-get install cups-client
+mkdir -p ~/.cups
+echo "ServerName 192.168.1.62" > ~/.cups/client.conf
+chmod 644 ~/.cups/client.conf
+lpstat -h 192.168.1.62 -s
+lpoptions -h 192.168.1.62 -d Virtual_PDF
+lpstat -d
+echo "test HQ-CLI" > ~/test-print.txt
+lp -h 192.168.1.62 -d Virtual_PDF ~/test-print.txt
+```
+Проверяем на сервере:
+```
+find / -name "*.pdf" -mmin -5 2>/dev/null
+ls -la /var/spool/cups-pdf/ANONYMOUS/
+file /var/spool/cups-pdf/ANONYMOUS/test-print.txt.pdf
+```
+### Возможные ошибки
+Если клиент не видит принтер:
+```
+rm -rf ~/.cups ~/.cache/cups
+mkdir -p ~/.cups
+echo "ServerName 192.168.1.62" > ~/.cups/client.conf
+lpstat -h 192.168.1.62 -s
+```
+Если печать не создает PDF:
+```
+tail -f /var/log/cups/error_log
+ls -la /var/spool/cups-pdf/
+ls -la /root/PDF/
+```
+Если ошибка "Запрещено":
+```
+grep -i "authtype" /etc/cups/cupsd.conf
+iptables -F
+```
+Результаты проверки:
+```
+# На сервере
+lpstat -p Virtual_PDF -d
+
+# На клиенте
+lpstat -h 192.168.1.62 -s
+
+# Созданный PDF-файл
+ls -la /var/spool/cups-pdf/ANONYMOUS/
+```
 
 </details>
