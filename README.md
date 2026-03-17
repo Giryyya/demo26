@@ -1,4 +1,4 @@
-<img width="903" height="96" alt="image" src="https://github.com/user-attachments/assets/24f22b3c-f563-42bd-b6cd-aeffb029596a" /># Информация по сети
+# Информация по сети
 ### Схема сети:
 
  <details>
@@ -3119,5 +3119,13 @@ cat > /etc/logrotate.d/remote_logs << 'EOF'
 }
 EOF
 ```
+### пока не работает, логи прилетают только через ручную отправку с помощью:
+### Отправка через netcat (UDP)
+echo "test from nc udp $(date)" | nc -u 192.168.1.62 514
+
+### Отправка через netcat (TCP)
+echo "test from nc tcp $(date)" | nc 192.168.1.62 514
+
+И работает logger --udp --server 192.168.1.62 --port 514 -p user.warning "MANUAL"
 
  </details>
