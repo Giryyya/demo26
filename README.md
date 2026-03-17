@@ -1,4 +1,4 @@
-# Информация по сети
+<img width="903" height="96" alt="image" src="https://github.com/user-attachments/assets/24f22b3c-f563-42bd-b6cd-aeffb029596a" /># Информация по сети
 ### Схема сети:
 
  <details>
@@ -3020,3 +3020,104 @@ ls -la /var/spool/cups-pdf/ANONYMOUS/
 ```
 
 </details>
+
+## Реализуйте логирование при помощи rsyslog на устройствах HQ-RTR, BR-RTR, BR-SRV
+
+<details>
+    <summary>ЗАДАНИЕ</summary>
+
+ Сервер сбора логов расположен на HQ-SRV, убедитесь, что сервер не является клиентом самому себе 
+ 
+• Приоритет сообщений должен быть не ниже warning 
+
+• Все журналы должны находиться в директории /opt. Для каждого устройства должна выделяться своя поддиректория, которая совпадает с именем машины 
+
+• Реализуйте ротацию собранных логов на сервере HQ-SRV: 
+
+• Ротируются все логи, находящиеся в директории и поддиректориях /opt 
+
+• Ротация производится один раз в неделю 
+
+• Логи необходимо сжимать 
+
+• Минимальный размер логов для ротации – 10МБ.
+
+ </details>
+
+ <details>
+    <summary>НАЖМИ</summary>
+  
+### Настраиваем HQ-SRV
+Устанавливаем rsyslog:
+```
+apt-get update
+apt-get install rsyslog -y
+```
+Редактируем /etc/rsyslog.d/00_common.conf:
+```
+cat > /etc/rsyslog.d/00_common.conf << 'EOF'
+module(load="imudp")
+input(type="imudp" port="514")
+module(load="imtcp")
+input(type="imtcp" port="514")
+
+$template RemoteLogs,"/opt/%HOSTNAME%/%PROGRAMNAME%.log"
+
+:fromhost-ip, !isequal, "127.0.0.1" ?RemoteLogs
+& stop
+EOF
+```
+Создаем директорию для логов:
+```
+mkdir -p /opt
+chmod 755 /opt
+```
+Перезапускаем и проверяем rsyslog:
+```
+systemctl restart rsyslog
+systemctl enable rsyslog
+systemctl status rsyslog
+netstat -tulpn | grep 514
+```
+
+<img width="903" height="96" alt="image" src="https://github.com/user-attachments/assets/72083c25-1289-40eb-ac2b-1c46e2c8e764" />
+
+### Настраиваем клиенты (HQ-RTR, BR-RTR, BR-SRV:
+Устанавливаем rsyslog:
+```
+apt-get update
+apt-get install rsyslog -y
+```
+Создаем файл /etc/rsyslog.d/remote.conf:
+```
+cat > /etc/rsyslog.d/remote.conf << 'EOF'
+*.warning @@192.168.1.62:514
+EOF
+```
+Перезапускаем rsyslog и отправляем проверочное сообщение:
+```
+systemctl restart rsyslog
+systemctl enable rsyslog
+logger -p user.warning "Test message from $(hostname)"
+```
+Создаем файл для ротации /etc/logrotate.d/remote_logs:
+```
+cat > /etc/logrotate.d/remote_logs << 'EOF'
+/opt/*/*.log {
+    weekly
+    rotate 4
+    size 10M
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 root adm
+    sharedscripts
+    postrotate
+        /usr/bin/systemctl kill -s HUP rsyslog > /dev/null 2>&1 || true
+    endscript
+}
+EOF
+```
+
+ </details>
