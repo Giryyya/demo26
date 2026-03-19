@@ -3053,6 +3053,13 @@ ls -la /var/spool/cups-pdf/ANONYMOUS/
 apt-get update
 apt-get install rsyslog -y
 ```
+Создаем файл для загрузки модулей:
+```
+cat > /etc/rsyslog.d/00-modules.conf << 'EOF'
+module(load="imudp")
+module(load="imtcp")
+EOF
+```
 Настраиваем прием логов:
 ```
 cat > /etc/rsyslog.d/01-inputs.conf << 'EOF'
