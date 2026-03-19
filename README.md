@@ -3101,13 +3101,43 @@ netstat -tulpn | grep 514
 <img width="875" height="69" alt="image" src="https://github.com/user-attachments/assets/9638c587-5455-46e3-90aa-0c927c4c1ff0" />
 
 ### Настраиваем BR-RTR, BR-SRV, HQ-RTR:
+### Возможно придется добавить правило в iptables на роутерах:
+```
+iptables -t nat -L PREROUTING -n -v | grep 514
+iptables -I FORWARD -s 192.168.2.14 -d 192.168.1.62 -p upd --dport 514 -j ACCEPT
+iptabes -I FORWARD -s 192.168.1.62 -d 192.168.2.14 -p udp --sport 514 -j ACCEPT
+iptables -I FORWARD -p tcp --dport 514 -j ACCEPT
+iptabes -I FORWARD -p udp --dport 514 -j ACCEPT
+iptables-save > /etc/iptables/rules.v4
+```
+
 Устанавливаем rsyslog:
 ```
 apt-get update && apt-get install rsyslog -y
 ```
-Настраиваем отправку логов на сервер:
+Редачим конфиг:
 ```
-echo '*.warning;*.crit;*.alert;*.emerg @@192.168.1.62:514' >> /etc/rsyslog.conf
+cat > /etc/rsyslog.conf << 'EOF'
+# rsyslog configuration file
+
+#### MODULES ####
+module(load="imuxsock")
+module(load="imklog")
+
+#### GLOBAL DIRECTIVES ####
+global(workDirectory="/var/spool/rsyslog")
+
+#### RULES ####
+# Local logs
+*.info;mail.none;authpriv.none;cron.none   /var/log/messages
+authpriv.*   /var/log/secure
+mail.*       /var/log/maillog
+cron.*       /var/log/cron
+*.emerg      :omusrmsg:*
+
+# Send all logs to central server
+*.* @@192.168.1.62:514
+EOF
 ```
 Проверяем и запускаем rsyslog:
 ```
@@ -3123,7 +3153,7 @@ logger -p user.info "Test INFO (SHOULD NOT ARRIVE) from $(hostname) $(date)"
 ```
 ### На сервере должна появится директория в /opt и там файлы с логами:
 
-<img width="517" height="366" alt="image" src="https://github.com/user-attachments/assets/9c50b7c8-0629-4772-84c8-1c42dd7eeb8a" />
+<img width="960" height="251" alt="image" src="https://github.com/user-attachments/assets/b9f5358f-72e5-4c68-81a3-6f1cafe623ef" />
 
 Настраиваем ротацию:
 ```
@@ -3179,9 +3209,9 @@ logger -p user.err "ERR message (SHOULD ARRIVE)"
 ```
 На сервере:
 ```
-grep "WARNING" /opt/*/*.log
-grep "ERR" /opt/*/*.log
-grep "INFO" /opt/*/*.log
+logrotate -f /etc/logrotate.d/central-logs
 ```
+
+<img width="679" height="245" alt="image" src="https://github.com/user-attachments/assets/ca00cb7c-f6be-4298-9177-69cffd27bb89" />
 
  </details>
