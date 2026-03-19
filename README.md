@@ -3047,62 +3047,82 @@ ls -la /var/spool/cups-pdf/ANONYMOUS/
  <details>
     <summary>НАЖМИ</summary>
   
-### Настраиваем HQ-SRV
+### Настраиваем HQ-RTR:
 Устанавливаем rsyslog:
 ```
 apt-get update
 apt-get install rsyslog -y
 ```
-Редактируем /etc/rsyslog.d/00_common.conf:
+Настраиваем прием логов:
 ```
-cat > /etc/rsyslog.d/00_common.conf << 'EOF'
-module(load="imudp")
-input(type="imudp" port="514")
-module(load="imtcp")
-input(type="imtcp" port="514")
-
-$template RemoteLogs,"/opt/%HOSTNAME%/%PROGRAMNAME%.log"
-
-:fromhost-ip, !isequal, "127.0.0.1" ?RemoteLogs
-& stop
+cat > /etc/rsyslog.d/01-inputs.conf << 'EOF'
+input(type="imudp" port="514" ruleset="remote")
+input(type="imtcp" port="514" ruleset="remote")
 EOF
+```
+Настраиваем шаблоны и правила:
+```
+cat > /etc/rsyslog.d/10-remote-rules.conf << 'EOF'
+template(name="RemotePerHostLogs" type="string"
+         string="/opt/%HOSTNAME%/%programname%.log")
+
+ruleset(name="remote") {
+    action(type="omfile" dynaFile="RemotePerHostLogs"
+           dirCreateMode="0755" fileCreateMode="0644")
+}
+EOF
+```
+Очищаем старые конфиги:
+```
+rm -f /etc/rsyslog.d/debug*.conf 2>/dev/null
+rm -f /etc/rsyslog.d/backup 2>/dev/null
+rm -f /etc/rsyslog.d/*.bak 2>/dev/null
+rm -f /etc/rsyslog.d/*~ 2>/dev/null
 ```
 Создаем директорию для логов:
 ```
 mkdir -p /opt
 chmod 755 /opt
 ```
-Перезапускаем и проверяем rsyslog:
+Проверяем и запускаем rsyslog:
 ```
+rsyslogd -N1
 systemctl restart rsyslog
-systemctl enable rsyslog
-systemctl status rsyslog
+systemctl status rsyslog --no-pager -l
 netstat -tulpn | grep 514
 ```
 
-<img width="903" height="96" alt="image" src="https://github.com/user-attachments/assets/72083c25-1289-40eb-ac2b-1c46e2c8e764" />
+<img width="875" height="69" alt="image" src="https://github.com/user-attachments/assets/9638c587-5455-46e3-90aa-0c927c4c1ff0" />
 
-### Настраиваем клиенты (HQ-RTR, BR-RTR, BR-SRV:
+### Настраиваем BR-RTR, BR-SRV, HQ-RTR:
 Устанавливаем rsyslog:
 ```
 apt-get update
 apt-get install rsyslog -y
 ```
-Создаем файл /etc/rsyslog.d/remote.conf:
+Настраиваем отправку логов на сервер:
 ```
-cat > /etc/rsyslog.d/remote.conf << 'EOF'
-*.warning @@192.168.1.62:514
-EOF
+echo '*.warning;*.crit;*.alert;*.emerg @@192.168.1.62:514' >> /etc/rsyslog.conf
 ```
-Перезапускаем rsyslog и отправляем проверочное сообщение:
+Проверяем и запускаем rsyslog:
 ```
+rsyslogd -N1
 systemctl restart rsyslog
-systemctl enable rsyslog
-logger -p user.warning "Test message from $(hostname)"
+systemctl status rsyslog --no-pager -l
 ```
-Создаем файл для ротации /etc/logrotate.d/remote_logs:
+Проверяем отправку:
 ```
-cat > /etc/logrotate.d/remote_logs << 'EOF'
+logger -p user.warning "Test WARNING from $(hostname) $(date)"
+logger -p user.crit "Test CRIT from $(hostname) $(date)"
+logger -p user.info "Test INFO (SHOULD NOT ARRIVE) from $(hostname) $(date)"
+```
+### На сервере должна появится директория в /opt и там файлы с логами:
+
+<img width="517" height="366" alt="image" src="https://github.com/user-attachments/assets/9c50b7c8-0629-4772-84c8-1c42dd7eeb8a" />
+
+Настраиваем ротацию:
+```
+cat > /etc/logrotate.d/central-logs << 'EOF'
 /opt/*/*.log {
     weekly
     rotate 4
@@ -3111,21 +3131,52 @@ cat > /etc/logrotate.d/remote_logs << 'EOF'
     delaycompress
     missingok
     notifempty
-    create 0640 root adm
+    create 0644 root root
     sharedscripts
     postrotate
-        /usr/bin/systemctl kill -s HUP rsyslog > /dev/null 2>&1 || true
+        systemctl kill -s HUP rsyslog > /dev/null 2>&1 || true
     endscript
 }
 EOF
 ```
-### пока не работает, логи прилетают только через ручную отправку с помощью:
-### Отправка через netcat (UDP)
-echo "test from nc udp $(date)" | nc -u 192.168.1.62 514
+Проверяем конфиг:
+```
+logrotate -d /etc/logrotate.d/central-logs
+logrotate -f /etc/logrotate.d/central-logs
+```
 
-### Отправка через netcat (TCP)
-echo "test from nc tcp $(date)" | nc 192.168.1.62 514
+<img width="1218" height="789" alt="image" src="https://github.com/user-attachments/assets/b8be42d8-c9ca-4d55-a902-26fff68bc3fc" />
 
-И работает logger --udp --server 192.168.1.62 --port 514 -p user.warning "MANUAL"
+<img width="596" height="838" alt="image" src="https://github.com/user-attachments/assets/73a9de9e-4ad9-46ef-9a3b-15eb100ab76e" />
+
+Проверяем ротацию:
+```
+ls -la /opt/br-srv/
+logrotate -f /etc/logrotate.d/central-logs
+ls -la /opt/br-srv/*.gz 2>/dev/null
+```
+Добавляем в крон:
+```
+ls -la /etc/cron.daily/ | grep logrotate
+echo "0 0 * * 0 /usr/sbin/logrotate /etc/logrotate.conf > /dev/null 2>&1" >> /var/spool/cron/root
+crontab -l
+```
+### Проверяем все:
+```
+ls -la /opt/
+ls -la /opt/br-srv/
+```
+На любом клиенте:
+```
+logger -p user.info "INFO message (SHOULD NOT ARRIVE)"
+logger -p user.warning "WARNING message (SHOULD ARRIVE)"
+logger -p user.err "ERR message (SHOULD ARRIVE)"
+```
+На сервере:
+```
+grep "WARNING" /opt/*/*.log
+grep "ERR" /opt/*/*.log
+grep "INFO" /opt/*/*.log
+```
 
  </details>
