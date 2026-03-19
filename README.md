@@ -3050,8 +3050,7 @@ ls -la /var/spool/cups-pdf/ANONYMOUS/
 ### Настраиваем HQ-RTR:
 Устанавливаем rsyslog:
 ```
-apt-get update
-apt-get install rsyslog -y
+apt-get update && apt-get install rsyslog -y
 ```
 Создаем файл для загрузки модулей:
 ```
@@ -3104,8 +3103,7 @@ netstat -tulpn | grep 514
 ### Настраиваем BR-RTR, BR-SRV, HQ-RTR:
 Устанавливаем rsyslog:
 ```
-apt-get update
-apt-get install rsyslog -y
+apt-get update && apt-get install rsyslog -y
 ```
 Настраиваем отправку логов на сервер:
 ```
