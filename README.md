@@ -3394,7 +3394,7 @@ netstat -tulpn | grep 9100
 apt-get update && apt-get install shadow-utils fontconfig -y
 wget https://dl.grafana.com/oss/release/grafana-11.2.0.linux-amd64.tar.gz
 tar -zxvf grafana-11.2.0.linux-amd64.tar.gz
-mv grafana-11.2.0 /opt/grafana
+mv grafana-v11.2.0 /opt/grafana
 ```
 Создаем пользователя:
 ```
@@ -3423,8 +3423,8 @@ EOF
 cat > /opt/grafana/conf/custom.ini << 'EOF'
 [server]
 http_port = 3000
-domain = mon.au-team.irpo
-root_url = http://mon.au-team.irpo:3000
+domain = mon.au.team
+root_url = http://mon.au.team:3000
 
 [auth]
 disable_login_form = false
@@ -3450,6 +3450,53 @@ netstat -tulpn | grep 3000
 На HQ-CLI добавляем dns запись:
 ```
 echo "192.168.1.62 mon.au.team" >> /etc/hosts
+```
+
+Открываем графану по адресу mon.au.team:3000
+```
+login:admin
+password:P@ssw0rd
+```
+Заходим сюда:
+
+<img width="1719" height="885" alt="image" src="https://github.com/user-attachments/assets/43b845cc-e553-4486-a2d9-929c64a529d2" />
+
+Жмем Add data source и выбираем prometheus:
+
+<img width="1716" height="923" alt="image" src="https://github.com/user-attachments/assets/9c8ca5af-de67-4fab-8bbb-3e9ad72b10e8" />
+
+Вбиваем сюда http://localhost:9090
+
+<img width="1710" height="855" alt="image" src="https://github.com/user-attachments/assets/213ed10d-702e-42c0-b7bb-408028809a8c" />
+
+Внизу жмем save & test:
+
+<img width="1078" height="243" alt="image" src="https://github.com/user-attachments/assets/b1d74848-0899-4fed-8193-62052b2d99ea" />
+
+Жмем на + в правом верхнем углу, import dashboard:
+
+<img width="1715" height="876" alt="image" src="https://github.com/user-attachments/assets/1de00880-1e70-4119-84ce-21268e878119" />
+
+Вводим 1860 в поле и нажимаем Load:
+
+<img width="1715" height="873" alt="image" src="https://github.com/user-attachments/assets/52dd0029-63ef-4904-8708-de47f8c535f4" />
+
+Жмем import:
+
+<img width="1716" height="875" alt="image" src="https://github.com/user-attachments/assets/12574dcf-98eb-4015-970c-bec7211e57ff" />
+
+Должно получиться так:
+
+<img width="1718" height="878" alt="image" src="https://github.com/user-attachments/assets/f8b9b3e5-09fa-4277-ae8d-356801821119" />
+
+Настраиваем iptables на hq-rtr:
+```
+iptables -I INPUT -p tcp --dport 9090 -s 192.168.1.0/26 -j ACCEPT
+iptables -I INPUT -p tcp --dport 9090 -j DROP
+iptables -I INPUT -p tcp --dport 3000 -s 192.168.1.0/26 -j ACCEPT
+iptables -I INPUT -p tcp --dport 3000 -j DROP
+iptables -I INPUT -p tcp --dport 9100 -s 192.168.2.14 -j ACCEPT
+iptables-save > /etc/iptables/rules.v4
 ```
 
  </details>
