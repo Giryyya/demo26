@@ -3215,3 +3215,241 @@ logrotate -f /etc/logrotate.d/central-logs
 <img width="679" height="245" alt="image" src="https://github.com/user-attachments/assets/ca00cb7c-f6be-4298-9177-69cffd27bb89" />
 
  </details>
+
+## Насервере HQ-SRV реализуйте мониторинг устройств с помощью открытого программного обеспечения
+
+<details>
+    <summary>ЗАДАНИЕ</summary>
+
+Обеспечьте доступность по URL - http://mon.au-team.irpo для сетей офиса HQ, внесите изменения в инфраструктуру разрешения доменных имён 
+
+• Мониторить нужно устройства HQ-SRV и BR-SRV 
+
+• В мониторинге должны визуально отображаться нагрузка на ЦП, объем занятой ОП и основного накопителя 
+
+• Логин и пароль для службы мониторинга admin P@ssw0rd 
+
+• Организуйте доступ к мониторингу для HQ-CLI, без внешнего доступа 
+
+• Выбор программного обеспечения, основание выбора и основные параметры с указанием порта, на котором работает мониторинг, отметьте в отчёте
+
+ </details>
+
+ <details>
+    <summary>НАЖМИ</summary>
+
+ Добавляем DNS записи на HQ-SRV и HQ-CLI:
+HQ-SRV: 
+```
+echo "127.0.0.1 mon.au.team" >> /etc/hosts
+```
+HQ-CLI:
+```
+echo "192.168.1.62 mon.au.team" >> /etc/hosts
+```
+### Будем использовать prometheus с grafana:
+### HQ-SRV:
+Создаем пользователя для сервисов:
+```
+useradd --no-create-home --shell /bin/false prometheus
+useradd --no-create-home --shell /bin/false node_exporter
+```
+Скачиваем Prometheus:
+```
+cd /tmp
+curl -LO https://github.com/prometheus/prometheus/releases/download/v2.55.1/prometheus-2.55.1.linux-amd64.tar.gz
+tar -xvf prometheus-2.55.1.linux-amd64.tar.gz
+mv prometheus-2.55.1.linux-amd64 /opt/prometheus
+```
+Создаем директорию:
+```
+mkdir -p /opt/prometheus/data
+chown -R prometheus:prometheus /opt/prometheus
+```
+Конфигурируем Prometheus:
+```
+cat > /opt/prometheus/prometheus.yml << 'EOF'
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'hq-srv'
+    static_configs:
+      - targets: ['192.168.1.62:9100']
+        labels:
+          instance: 'hq-srv'
+          group: 'servers'
+
+  - job_name: 'br-srv'
+    static_configs:
+      - targets: ['192.168.2.14:9100']
+        labels:
+          instance: 'br-srv'
+          group: 'servers'
+EOF
+
+chown prometheus:prometheus /opt/prometheus/prometheus.yml
+```
+Создаем systemd юнит:
+```
+cat > /etc/systemd/system/prometheus.service << 'EOF'
+[Unit]
+Description=Prometheus
+After=network.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+ExecStart=/opt/prometheus/prometheus \
+    --config.file=/opt/prometheus/prometheus.yml \
+    --storage.tsdb.path=/opt/prometheus/data \
+    --web.console.templates=/opt/prometheus/consoles \
+    --web.console.libraries=/opt/prometheus/console_libraries
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+Устанавливаем node_exporter:
+```
+cd /tmp
+curl -LO https://github.com/prometheus/node_exporter/releases/download/v1.8.2/node_exporter-1.8.2.linux-amd64.tar.gz
+tar -xvf node_exporter-1.8.2.linux-amd64.tar.gz
+mv node_exporter-1.8.2.linux-amd64 /opt/node_exporter
+chown -R node_exporter:node_exporter /opt/node_exporter
+```
+Создаем systemd юнит для node_exporter:
+```
+cat > /etc/systemd/system/node_exporter.service << 'EOF'
+[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/opt/node_exporter/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+Запускаем Prometheus и Node_Exporter:
+```
+systemctl daemon-reload
+systemctl enable prometheus node_exporter
+systemctl start prometheus node_exporter
+systemctl status prometheus --no-pager -l
+systemctl status node_exporter --no-pager -l
+netstat -tulpn | grep -E "9090|9100"
+```
+### BR-SRV:
+Создаем пользователя:
+```
+useradd --no-create-home --shell /bin/false node_exporter
+```
+Устанавливаем node_exporter:
+```
+cd /tmp
+curl -LO https://github.com/prometheus/node_exporter/releases/download/v1.8.2/node_exporter-1.8.2.linux-amd64.tar.gz
+tar -xvf node_exporter-1.8.2.linux-amd64.tar.gz
+mv node_exporter-1.8.2.linux-amd64 /opt/node_exporter
+chown -R node_exporter:node_exporter /opt/node_exporter
+```
+Создаем systemd юнит:
+```
+cat > /etc/systemd/system/node_exporter.service << 'EOF'
+[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/opt/node_exporter/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+Запускаем node_exporter:
+```
+systemctl daemon-reload
+systemctl enable node_exporter
+systemctl start node_exporter
+systemctl status node_exporter --no-pager -l
+netstat -tulpn | grep 9100
+```
+### HQ-SRV:
+Устанавливаем Grafana:
+```
+apt-get update && apt-get install shadow-utils fontconfig -y
+wget https://dl.grafana.com/oss/release/grafana-11.2.0.linux-amd64.tar.gz
+tar -zxvf grafana-11.2.0.linux-amd64.tar.gz
+mv grafana-11.2.0 /opt/grafana
+```
+Создаем пользователя:
+```
+useradd --no-create-home --shell /bin/false grafana
+chown -R grafana:grafana /opt/grafana
+```
+Создаем systemd юнит для grafana:
+```
+cat > /etc/systemd/system/grafana.service << 'EOF'
+[Unit]
+Description=Grafana
+After=network.target
+
+[Service]
+User=grafana
+Group=grafana
+Type=simple
+ExecStart=/opt/grafana/bin/grafana-server -homepath /opt/grafana
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+Конфигурируем grafana:
+```
+cat > /opt/grafana/conf/custom.ini << 'EOF'
+[server]
+http_port = 3000
+domain = mon.au-team.irpo
+root_url = http://mon.au-team.irpo:3000
+
+[auth]
+disable_login_form = false
+
+[auth.anonymous]
+enabled = false
+
+[security]
+admin_user = admin
+admin_password = P@ssw0rd
+EOF
+
+chown grafana:grafana /opt/grafana/conf/custom.ini
+```
+Запускаем grafana:
+```
+systemctl daemon-reload
+systemctl enable grafana
+systemctl start grafana
+systemctl status grafana --no-pager -l
+netstat -tulpn | grep 3000
+```
+На HQ-CLI добавляем dns запись:
+```
+echo "192.168.1.62 mon.au.team" >> /etc/hosts
+```
+
+ </details>
