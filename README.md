@@ -3581,3 +3581,78 @@ cat /etc/ansible/PC-INFO/*.yml
 ```
 
  </details>
+
+##  На HQ-SRV настройте программное обеспечение fail2ban для защиты ssh 
+
+<details>
+    <summary>ЗАДАНИЕ</summary>
+ 
+Укажите порт ssh 
+
+• При 3 неуспешных авторизациях адрес атакующего попадает в бан 
+
+• Бан производится на 1минуту
+
+ </details>
+
+<details>
+    <summary>НАЖМИ</summary>
+ 
+Устанавливаем fail2ban:
+```
+apt-get update && apt-get install fail2ban -y
+```
+Создаем конфиг:
+```
+cat > /etc/fail2ban/jail.local << 'EOF'
+[DEFAULT]
+bantime = 60
+
+findtime = 600
+
+maxretry = 3
+
+banaction = iptables-multiport
+banaction_allports = iptables-allports
+
+protocol = tcp
+
+[sshd]
+enabled = true
+port = 2026
+logpath = /var/log/secure
+backend = systemd
+EOF
+```
+Проверяем синтаксис и запускаем:
+```
+fail2ban-client -t
+systemctl enable --now fail2ban
+systemctl status fail2ban
+```
+Проверяем работоспособность:
+```
+fail2ban-client status sshd
+```
+
+<img width="621" height="181" alt="image" src="https://github.com/user-attachments/assets/2d3876a2-4f89-437c-94db-3b4bdfb79ab3" />
+
+В конфиге ssh убираем ограничение на заход только через sshuser /etc/openssh/sshd_config:
+```
+#AllowUsers sshuser
+```
+
+С другого компьютера пробуем неудачно зайти через ssh:
+```
+ssh -p 2026 user@192.168.1.62
+```
+На сервере проверяем что IP банится:
+```
+fail2ban-client status sshd
+fail2ban-client banned
+```
+Снять бан можно командой:
+```
+fail2ban-client set sshd unbanip 192.168.2.14
+```
+ </details>
