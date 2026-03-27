@@ -3500,3 +3500,84 @@ iptables-save > /etc/iptables/rules.v4
 ```
 
  </details>
+
+## Реализуйте механизм инвентаризации машин HQ-SRV и HQ-CLI через Ansible на BR-SRV
+
+<details>
+    <summary>ЗАДАНИЕ</summary>
+ 
+Плейбук должен собирать информацию о рабочих местах: 
+
+• Имя компьютера 
+
+• IP-адрес компьютера 
+
+• Плейбук, должен быть размещен в директории /etc/ansible, отчёты в поддиректории PC-INFO, в формате .yml. Файлы должны называется именем компьютера, который был инвентаризирован 
+
+• Файл плейбука располагается в образе Additional.iso в директории playbook
+
+ </details>
+
+ <details>
+    <summary>НАЖМИ</summary>
+
+ Возможно придется прокинуть ключи для рута на машины по аналогии с настройкой ansible во 2 модуле:
+ ```
+ssh-keygen
+ssh-copy-id -p 2026 sshuser@192.168.1.62
+ssh-copy-id -p 2026 sshuser@192.168.1.3
+ssh-copy-id -p 2026 sshuser@192.168.2.1
+ssh-copy-id -p 2026 sshuser@192.168.1.1
+```
+Создаем плейбук:
+```
+vim /etc/ansible/inventory-pc.yml
+```
+Вставляем (тут важны пробелы в строчках, как файл должен выглядеть скрин ниже):
+```
+---
+---
+- name: Collect PC Information
+  hosts: hq
+  gather_facts: yes
+  tasks:
+    - name: Create PC-INFO directory
+      local_action: 
+        module: file
+        path: /etc/ansible/PC-INFO
+        state: directory
+        mode: '0755'
+
+    - name: Generate PC report
+      local_action:
+        module: copy
+        content: |
+          hostname: {{ ansible_hostname }}
+          ip_address: {{ ansible_default_ipv4.address }}
+        dest: "/etc/ansible/PC-INFO/{{ ansible_hostname }}.yml"
+```
+
+<img width="1709" height="845" alt="image" src="https://github.com/user-attachments/assets/c3c5965f-be15-4c2d-8ce9-5695dbe17aef" />
+
+<img width="628" height="431" alt="image" src="https://github.com/user-attachments/assets/a9835584-f5f2-4ece-97a6-a088aaa56a7e" />
+
+Создаем директорию для отчетов:
+```
+mkdir -p /etc/ansible/PC-INFO
+```
+Запускаем:
+```
+cd /etc/ansible
+ansible-playbook inventory-pc.yml
+```
+Получаем:
+
+<img width="934" height="684" alt="image" src="https://github.com/user-attachments/assets/5beee67f-8573-44a0-a4cb-4570d54964b0" />
+
+Проверяем:
+```
+ls -la /etc/ansible/PC-INFO/
+cat /etc/ansible/PC-INFO/*.yml
+```
+
+ </details>
