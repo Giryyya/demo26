@@ -3637,7 +3637,7 @@ fail2ban-client status sshd
 
 <img width="621" height="181" alt="image" src="https://github.com/user-attachments/assets/2d3876a2-4f89-437c-94db-3b4bdfb79ab3" />
 
-В конфиге ssh убираем ограничение на заход только через sshuser и убираем количество попыток входа /etc/openssh/sshd_config (да это противоречит заданию из 1 модуля, но кого это волнует):
+В конфиге ssh убираем ограничение на заход только через sshuser и убираем количество попыток входа /etc/openssh/sshd_config (да, это противоречит заданию из 1 модуля, но кого это волнует):
 ```
 #AllowUsers sshuser
 #MaxAuthTries 2
