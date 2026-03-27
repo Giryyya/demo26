@@ -3538,7 +3538,7 @@ vim /etc/ansible/inventory-pc.yml
 ---
 ---
 - name: Collect PC Information
-  hosts: hq
+  hosts: 192.168.1.3, 192.168.1.62
   gather_facts: yes
   tasks:
     - name: Create PC-INFO directory
