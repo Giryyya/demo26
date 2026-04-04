@@ -639,31 +639,31 @@ systemctl enable --now bind
 ```
 Создаем прямую и обратную зону в /etc/bind/local.conf:
 
-<img width="902" height="683" alt="image" src="https://github.com/user-attachments/assets/ba19e661-36c9-4a0a-aa3e-53a43b503f2a" />
+<img width="419" height="380" alt="image" src="https://github.com/user-attachments/assets/30bc355d-2f79-4716-a1ba-2d9f28f82a3a" />
 
 Копируем дефолты:
 ```
-cp /etc/bind/zone/{localhost,au.db}
+cp /etc/bind/zone/{localhost,au-team.db}
 cp /etc/bind/zone/127.in-addr.arpa /etc/bind/zone/1.168.192.in-addr.arpa.db
 cp /etc/bind/zone/127.in-addr.arpa /etc/bind/zone/2.168.192.in-addr.arpa.db
 ```
 Назначаем права:
 ```
-chown root:named /etc/bind/zone/au.db
+chown root:named /etc/bind/zone/au-team.db
 chown root:named /etc/bind/zone/1.168.192.in-addr.arpa.db
 chown root:named /etc/bind/zone/2.168.192.in-addr.arpa.db
 ```
-Настраиваем зону прямого просмотра /etc/bind/zone/au.db:
+Настраиваем зону прямого просмотра /etc/bind/zone/au-team.db:
 
-<img width="897" height="657" alt="image" src="https://github.com/user-attachments/assets/86b0b940-e5f3-4000-b5e1-cc2e63ac3c3e" />
+<img width="744" height="838" alt="image" src="https://github.com/user-attachments/assets/d6cb5a8a-96eb-4fe2-9559-647291c82d28" />
 
 Настраиваем зону обратного просмотра /etc/bind/zone/1.168.192.in-addr.arpa.db:
 
-<img width="918" height="681" alt="image" src="https://github.com/user-attachments/assets/326fc7d8-10f9-48af-ab0d-0c1f0c8c94a5" />
+<img width="758" height="845" alt="image" src="https://github.com/user-attachments/assets/4de28e52-66cc-4077-9ee8-fdbbd67084aa" />
 
 Настраиваем зону обратного просмотра /etc/bind/zone/2.168.192.in-addr.arpa.db:
 
-<img width="883" height="716" alt="image" src="https://github.com/user-attachments/assets/70c19ee1-57a3-4c7e-9d83-bc942ac153a1" />
+<img width="746" height="841" alt="image" src="https://github.com/user-attachments/assets/af184b7a-0496-4aca-a4e6-112a84e5d511" />
 
 ###  ВАЖНО!!! Я добавил в зону прямого просмотра все устройства кроме ISP и сделал обратные зоны для всех устройств в подсетях 1.0 и 2.0. Смотрите задание, там могут быть другие условия.
 Проверяем зоны:
@@ -671,7 +671,8 @@ chown root:named /etc/bind/zone/2.168.192.in-addr.arpa.db
 named-checkconf -z
 ```
 
-<img width="506" height="189" alt="image" src="https://github.com/user-attachments/assets/fde35c82-e213-4e02-86ed-5d72d87e1ffb" />
+<img width="496" height="159" alt="image" src="https://github.com/user-attachments/assets/0d8a0f2e-da92-4e53-982e-a32460b5a80d" />
+
 
 В файле /etc/hosts прописываем адрес сервера:
 ```
@@ -693,7 +694,7 @@ named-checkconf -z
 search au.team
 nameserver 192.168.1.62
 ```
-И так делаем во всех интерфейсах (и на днс сервере тоже делаем)
+И так делаем во всех интерфейсах (на HQ-SRV добавляем еще 8.8.8.8 или другой резолвер)
 
 Перезагружаем сеть:
 ```
