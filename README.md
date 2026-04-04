@@ -629,7 +629,6 @@ DNS сервер(77.88.8.7, 77.88.8.3 или другие)
 ```
 listen-on { any; };
 allow-query { any; };
-allow-transfer { 192.168.33.254; };
 ```
 ```
 systemctl restart network
