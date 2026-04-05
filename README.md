@@ -764,37 +764,37 @@ hquser№ (например hquser1, hquser2 и т.д.)
 
 Устанавливаем необходимые пакеты:
 ```
-apt update
-apt install samba-dc samba-winbind krb5-kdc chrony iptables
+apt-get update && apt-get install task-samba-dc samba-client samba-winbind krb5-kinit -y
 ```
-Редактируем хрони /etc/chrony.conf:
+Переименовываем старый конфиг:
 ```
-server pool.ntp.org iburst
-```
-Перезапускаем хрони:
-```
-systemctl enable --now chronyd
-```
-Останавливаем стандартные службы самбы, если запущены:
-```
-systemctl stop smbd nmbd winbind
-systemctl disable smbd nmbd winbind
+mv /etc/samba/smb.conf /etc/samba/smb.conf.bak
 ```
 Создаем домен:
 ```
-rm /etc/samba/smb.conf
 samba-tool domain provision --use-rfc2307 --interactive
 ```
+| Настройка | Значение|
+|:-|:-|
+|Realm | AU-TEAM.IRPO |
+| Domain | AU-TEAM |
+| Server Role  | dc |
+| DNS backend | EcoRouter/Alt 
+|DNS forwarder | 192.168.1.62  |
+| Administrator password | P@ssw0rd |
+
+Скопируем файл кербероса в системную директорию:
 ```
-Realm: AU.TEAM
-Domain: AU
-Server Role: dc
-DNS backend: SAMBA_INTERNAL 
-DNS forwarder: 192.168.1.62 
-Administrator password: P@ssw0rd 
+cp /var/lib/samba/private/krb5.conf /etc/
+```
+Выключаем bind:
+```
+systemctl stop bind
+systemctl disable bind
 ```
 Запускаем самбу (сначала нужно ребутнуть сервер, иначе будут ошибки):
 ```
+systemctl unmask samba
 systemctl enable --now samba
 ```
 Открываем порты в iptables (на роутерах):
@@ -809,7 +809,7 @@ samba-tool domain level show
 samba-tool user list
 ```
 
-<img width="488" height="280" alt="image" src="https://github.com/user-attachments/assets/5867b327-4629-4271-8289-c4c75df2a0a2" />
+<img width="701" height="268" alt="image" src="https://github.com/user-attachments/assets/c49c16db-22df-416f-92cb-d8f7a5d93565" />
 
 Создаем группу hq:
 ```
@@ -833,7 +833,7 @@ samba-tool group listmembers hq
 
 Проверяем /etc/resolv.conf:
 ```
-search au.team
+search au-team.irpo
 nameserver 192.168.2.14
 nameserver 192.168.1.62
 ```
@@ -857,17 +857,17 @@ apt-get install realmd sssd sssd-tools adcli krb5-workstation samba-common-tools
 
 Вводим все как на скрине в Active Directory и жмем кнопку применить снизу, система попросит ввести учетку админа домена
 
-<img width="1284" height="739" alt="image" src="https://github.com/user-attachments/assets/e9de9b3a-3e0f-4586-90a8-813e04cb8595" />
+<img width="699" height="243" alt="image" src="https://github.com/user-attachments/assets/a3d20dfd-2e58-4297-8f1f-111efa25542c" />
 
 ### на устройствах без графики:
 
 После установки пакетов обнаруживаем домен:
 ```
-realm discover au.team
+realm discover au-team.irpo
 ```
 Заходим в домен:
 ```
-realm join -U Administrator au.team
+realm join -U Administrator au-team.irpo
 ```
 ### Настраиваем группу hq на hq-cli:
 Задаем права на sudo:
