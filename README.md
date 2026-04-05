@@ -839,8 +839,8 @@ nameserver 192.168.1.62
 ```
 Проверяем доступность:
 ```
-ping au.team
-nslookup _ldap._tcp.au.team
+ping au-team.irpo
+nslookup _ldap._tcp.au-team.irpo
 ```
 Устанавливаем пакеты (Если при установке выбрали все что связано с доменами, то не нужно, если нет графики, то нужно):
 ```
