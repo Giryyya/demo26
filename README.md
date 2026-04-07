@@ -995,6 +995,16 @@ mdadm --detail --scan --verbose /dev/md0 > /etc/mdadm.conf
 echo '/dev/md0 /raid ext4 defaults 0 0' >> /etc/fstab
 mount /dev/md0 /raid
 ```
+Проверяем массив:
+```
+df -h
+cat /proc/mdstat
+```
+
+<img width="749" height="213" alt="image" src="https://github.com/user-attachments/assets/e4cab274-eae9-4971-bbbc-4ff5427228c7" />
+
+<img width="436" height="107" alt="image" src="https://github.com/user-attachments/assets/cd69c065-0d88-4f8d-af22-d437c081fd42" />
+
  </details>
 
  ## Настройте сервер сетевой файловой системы (nfs) на HQ-SRV
