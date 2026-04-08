@@ -1755,9 +1755,7 @@ echo "Sample image 2" > ~/web/images/image2.txt
 ```
 Устанавливаем необходимое ПО:
 ```
-apt-get update
-apt-get install apache2 -y
-apt-get install mariadb-server mariadb-client php8.2 php8.2-mysqli php8.2-mysqlnd apache2-mod_php8.2 php8.2-pdo php8.2-pdo_mysql -y
+apt-get update && apt-get install apache2 mariadb-server mariadb-client php8.2 php8.2-mysqli php8.2-mysqlnd apache2-mod_php8.2 php8.2-pdo php8.2-pdo_mysql -y
 ```
 Запускаем MariaDB:
 ```
