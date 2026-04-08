@@ -1757,9 +1757,7 @@ echo "Sample image 2" > ~/web/images/image2.txt
 ```
 apt-get update
 apt-get install apache2 -y
-apt-get install mariadb-server mariadb-client -y
-apt-get install php8.2 php8.2-mysqli php8.2-mysqlnd apache2-mod_php8.2 -y
-apt-get install php8.2-pdo php8.2-pdo_mysql -y
+apt-get install mariadb-server mariadb-client php8.2 php8.2-mysqli php8.2-mysqlnd apache2-mod_php8.2 php8.2-pdo php8.2-pdo_mysql -y
 ```
 Запускаем MariaDB:
 ```
@@ -1854,7 +1852,7 @@ ls -la /etc/httpd2/conf/sites-enabled/
 vim /etc/httpd2/conf/sites-available/default.conf
 ```
 ```
-DocumentRoot /etc/httpd2/htdocs
+DocumentRoot "/etc/httpd2/htdocs"
 <Directory /etc/httpd2/htdocs>
     Options Indexes FollowSymLinks
     AllowOverride All
