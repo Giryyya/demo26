@@ -1962,14 +1962,15 @@ iptables-save > /etc/iptables/rules.v4
 ```
 iptables -t nat -A PREROUTING -i ens33-p tcp --dport 8080 -j DNAT --to-destination 192.168.2.14:8080
 iptables -t nat -A PREROUTING -i ens33 -p tcp --dport 2026 -j DNAT --to-destination 192.168.2.14:2026
-sysctl -p iptables-save > /etc/iptables/rules.v4
+sysctl -p
+iptables-save > /etc/iptables/rules.v4
 ```
 На HQ-RTR:
 ```
 iptables -t nat -A PREROUTING -i ens33-p tcp --dport 8080 -j DNAT --to-destination 192.168.2.62:8080
 iptables -t nat -A PREROUTING -i ens33 -p tcp --dport 2026 -j DNAT --to-destination 192.168.1.62:2026
 sysctl -p
- iptables-save > /etc/iptables/rules.v4
+iptables-save > /etc/iptables/rules.v4
 ```
 Проверяем ssh на HQ-CLI (должны подключиться к BR-SRV):
 ```
