@@ -545,6 +545,19 @@ show ip ospf route
 
 <img width="498" height="220" alt="image" src="https://github.com/user-attachments/assets/f7df5030-7a98-4561-a69c-ba35601ba708" />
 
+## Настраиваем доступ к ISP:
+Прописываем маршруты на ISP,:
+```
+echo "192.168.1.0/26 via 172.16.1.2" > /etc/net/ifaces/ens38/ipv4route
+
+```
+Прописываем Iptables на HQ-RTR, BR-RTR:
+```
+iptables -t nat -D POSTROUTING -o ens33 -j MASQUERADE
+iptables -t nat -A POSTROUTING -o ens33 ! -d 172.16.0.0/12 -j MASQUERADE
+iptables-save > /etc/iptables/rules.v4
+```
+
  </details>
 
 ##  Настройка динамической трансляции адресов маршрутизаторах HQ-RTR и BR-RTR
@@ -605,18 +618,6 @@ systemctl restart dhcpd
 
 ![image](https://github.com/user-attachments/assets/e929cbfd-2d7e-49c1-9a27-db636dfb165c)
 
-## Настраиваем доступ к ISP:
-Прописываем маршруты на ISP:
-```
-ip route add 192.168.1.0/26 via 172.16.1.2
-ip route add 192.168.2.0/28 via 172.16.2.2
-```
-Прописываем Iptables на HQ-RTR, BR-RTR:
-```
-iptables -t nat -D POSTROUTING -o ens33 -j MASQUERADE
-iptables -t nat -A POSTROUTING -o ens33 ! -d 172.16.0.0/12 -j MASQUERADE
-iptables-save > /etc/iptables/rules.v4
-```
 
  </details>
 
@@ -1097,79 +1098,7 @@ echo '192.168.1.62:/raid/nfs /mnt/nfs nfs auto 0 0 ' >> /etc/fstab
 
  <details>
     <summary>НАЖМИ</summary>
- 
-Настраиваем маршрутизацию до ISP:
-### ISP:
-Устанавливаем frr:
-```
-apt-get install frr -y
-```
-Включаем OSPF в конфиге /etc/frr/daemons:
-
-<img width="863" height="684" alt="image" src="https://github.com/user-attachments/assets/889ab48a-5ad0-45ea-ae7e-e93045da4910" />
-
-Запускаем frr:
-```
-systemctl enable --now frr
-```
-Переходим в консоль frr:
-```
-vtysh
-```
-Настраиваем настройки в терминале:
-```
-conf t
-router ospf
-passive-interface default
-network 192.168.1.0/26 area 0
-network 192.168.2.0/28 area 0
-network 10.10.10.0/30 area 0
-network 172.16.1.0/28 area 0
-network 172.16.2.0/28 area 0
-area 0 authentication
-exit
-```
-Настраиваем интерфейсы(ens37, ens38):
-```
-interface ens37
-no ip ospf network broadcast
-no ip ospf passive
-ip ospf authentication
-ip ospf authentication-key password
-exit
-```
-Не забываем сохранить изменения (как в циске):
-```
-write
-```
-Перезапускаем frr:
-```
-systemctl restart frr
-```
-### HQ-RTR и BR-RTR:
-
-В frr необходимо добавить сети ISP:
-```
-vtysh
-conf t
-router ospf
-network 172.16.1.0/28 area 0
-network 172.16.2.0/28 area 0
-ex
-interface ens33
-no ip ospf network broadcast
-no ip ospf passive
-ip ospf authentication
-ip ospf authentication-key password
-exit
-do wr
-```
-Перезапускаем frr:
-```
-systemctl restart frr
-```
-### Настраиваем chrony на ISP:
-
+  
 Устанавливаем Chrony:
 ```
 apt-get install chrony -y
@@ -2008,8 +1937,6 @@ ssh -p 2026 sshuser@172.16.2.2
 <details>
     <summary>НАЖМИ</summary>
 
-### Чтобы ISP видел HQ-SRV нужно прокинуть на него frr, а если прокинуть на него маршрутизацию, то вся сеть начинает невероятно плохо работать, так что на свой страх и риск
-
 Устанавливаем nginx:
 ```
 apt-get install nginx -y
@@ -2023,14 +1950,14 @@ systemctl enable --now nginx
 server
 {
 listen 80;
-server_name web.au.team;
+server_name web.au-team.irpo;
 location / {
 proxy_pass http://192.168.1.62:80;
 }
 }
 server {
 listen 80;
-server_name docker;
+server_name docker.au-team.irpo;
 location / {
 proxy_pass http://192.168.2.14:8080;
 }
@@ -2044,7 +1971,7 @@ proxy_pass http://192.168.2.14:8080;
 nginx -t
 systemctl restart nginx
 ```
-### Должно получиться так (Может долго очень грузится и не на всех хостах и причина этому скорее всего - ISP, маршрутизация начинает очень плохо работать с 3 включенным роутером):
+### Должно получиться так:
 
 <img width="1721" height="949" alt="image" src="https://github.com/user-attachments/assets/8eb0e1c3-0b27-4ad5-8247-2e5bd164175b" />
 
