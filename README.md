@@ -1945,37 +1945,58 @@ apt-get install nginx -y
 ```
 systemctl enable --now nginx
 ```
-Редачим /etc/nginx/nginx.conf (Вставляем перед последней скобкой, иначе nginx будет жаловаться на синтаксис):
+Создаем /etc/nginx/sites-available.d/proxy.conf:
 ```
-server
-{
-listen 80;
-server_name web.au-team.irpo;
-location / {
-proxy_pass http://192.168.1.62:80;
-}
+server {
+    listen 80;
+    server_name web.au-team.irpo;
+
+    location / {
+        proxy_pass http://192.168.1.62:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 }
 server {
-listen 80;
-server_name docker.au-team.irpo;
-location / {
-proxy_pass http://192.168.2.14:8080;
-}
+    listen 80;
+    server_name docker.au-team.irpo;
+
+    location / {
+        proxy_pass http://192.168.2.14:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 }
 ```
-
-<img width="991" height="701" alt="image" src="https://github.com/user-attachments/assets/e6e43ee4-1744-4e2a-851b-0df2811207bb" />
-
-Проверяем конфиг и перезапускаем:
+Включаем:
+```
+ln -s /etc/nginx/sites-available.d/proxy.conf /etc/nginx/sites-enabled.d/
+```
+Проверяем и перезапускаем:
 ```
 nginx -t
 systemctl restart nginx
+```
+На клиентах добавляем строчку в /etc/hosts:
+```
+192.168.189.131 web.au-team.irpo docker.au-team.irpo
 ```
 ### Должно получиться так:
 
 <img width="1721" height="949" alt="image" src="https://github.com/user-attachments/assets/8eb0e1c3-0b27-4ad5-8247-2e5bd164175b" />
 
 <img width="1718" height="951" alt="image" src="https://github.com/user-attachments/assets/3e9ae7fd-29c0-43d5-9350-53b20178918a" />
+
+### Если не открывается что то, то скорее всего порт занят на ISP, проверяем порты и убиваем процессы:
+```
+ss -tlnp | grep :8080
+```
+
+<img width="831" height="162" alt="image" src="https://github.com/user-attachments/assets/2f8a938c-be92-466c-b917-16da0efdc73e" />
 
  </details>
 
