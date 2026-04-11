@@ -605,6 +605,19 @@ systemctl restart dhcpd
 
 ![image](https://github.com/user-attachments/assets/e929cbfd-2d7e-49c1-9a27-db636dfb165c)
 
+## Настраиваем доступ к ISP:
+Прописываем маршруты на ISP:
+```
+ip route add 192.168.1.0/26 via 172.16.1.2
+ip route add 192.168.2.0/28 via 172.16.2.2
+```
+Прописываем Iptables на HQ-RTR, BR-RTR:
+```
+iptables -t nat -D POSTROUTING -o ens33 -j MASQUERADE
+iptables -t nat -A POSTROUTING -o ens33 ! -d 172.16.0.0/12 -j MASQUERADE
+iptables-save > /etc/iptables/rules.v4
+```
+
  </details>
 
 ## Настройте инфраструктуру разрешения доменных имён для офисов HQ и BR
