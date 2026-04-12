@@ -2032,13 +2032,13 @@ chown root:root /etc/nginx/.htpasswd
 chmod 644 /etc/nginx/.htpasswd
 ```
 
-Редактируем конфигурацию /etc/nginx/sites-available.d/web.au.team:
+Редактируем конфигурацию /etc/nginx/sites-available.d/proxy.conf:
 ```
 server {
     listen 80;
-    server_name web.au.team;
-    access_log /var/log/nginx/web.au.team.access.log;
-    error_log /var/log/nginx/web.au.team.error.log;
+    server_name web.au-team.irpo;
+    access_log /var/log/nginx/web.au-team.irpo.access.log;
+    error_log /var/log/nginx/web.au-team.irpo.error.log;
     location / {
         auth_basic "Restricted Access - Please Login";
         auth_basic_user_file /etc/nginx/.htpasswd;
@@ -2057,20 +2057,12 @@ server {
 ```
 Создаем симлинк в sites-enabled.d:
 ```
-ln -s /etc/nginx/sites-available.d/web.au.team /etc/nginx/sites-enabled.d/
+ln -s /etc/nginx/sites-available.d/proxy.conf /etc/nginx/sites-enabled.d/
 ```
 Проверяем синтаксис и перезапускаем nginx:
 ```
 nginx -t
 systemctl restart nginx
-```
-На клиентской машине, с которой будете тестировать, добавьте:
-```
-echo "192.168.131.189 web.au.team" >> /etc/hosts
-```
-На DNS-сервере добавьте A-запись:
-```
-web.au.team. IN A 192.168.131.189
 ```
 Включаем форвардинг пакетов:
 ```
