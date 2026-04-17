@@ -2408,12 +2408,11 @@ touch ~/ca/index.txt
 echo 1000 > ~/ca/serial
 ```
 Редачим конфиг /var/lib/ssl/openssl.cnf:
-```
 
 <img width="663" height="892" alt="image" src="https://github.com/user-attachments/assets/1d5eab13-0e47-4855-8481-efd711c2d501" />
 
 <img width="704" height="835" alt="image" src="https://github.com/user-attachments/assets/660ab021-aa65-46e3-b3c7-f3842010b084" />
-```
+
 Проверяем конфиг:
 ```
 openssl version -d
