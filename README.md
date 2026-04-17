@@ -2441,8 +2441,8 @@ openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 \
 chmod 400 private/web.au-team.irpo.key.pem
 
 openssl req -new -key private/web.au-team.irpo.key.pem \
--subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=web.au.team/emailAddress=admin@au-team.irpo" \
--out web.au.team.csr
+-subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=web.au-team.irpo/emailAddress=admin@au-team.irpo" \
+-out web.au-team,irpo.csr
 
 openssl x509 -req -in web.au-team.irpo.csr \
 -CA certs/ca.cert.pem -CAkey private/ca.key.pem \
