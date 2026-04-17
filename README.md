@@ -2514,7 +2514,7 @@ cp /tmp/web.au-team.irpo.key.pem /etc/nginx/ssl/
 cp /tmp/docker.au-team.irpo.cert.pem /etc/nginx/ssl/
 cp /tmp/docker.au-team.irpo.key.pem /etc/nginx/ssl/
 ```
-На ISP редактируем nginx /etc/nginx/sites.avialable.d/proxy.conf:
+На ISP редактируем nginx /etc/nginx/sites-available.d/proxy.conf:
 ```
 server {
     listen 80;
