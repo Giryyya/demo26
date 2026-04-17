@@ -2432,7 +2432,7 @@ openssl req -x509 -new -key private/ca.key.pem \
   
 openssl x509 -in certs/ca.cert.pem -text -noout | grep -E "Issuer:|Subject:|Not Before|Not After"
 ```
-Создаем сертификаты для HQ-SRV и BR-SRV (вводить построчно):
+Создаем сертификаты для HQ-SRV и BR-SRV:
 ```
 cd ~/ca
 
@@ -2442,21 +2442,21 @@ chmod 400 private/web.au-team.irpo.key.pem
 
 openssl req -new -key private/web.au-team.irpo.key.pem \
 -subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=web.au-team.irpo/emailAddress=admin@au-team.irpo" \
--out web.au-team,irpo.csr
+-out web.au-team.irpo.csr
 
 openssl x509 -req -in web.au-team.irpo.csr \
 -CA certs/ca.cert.pem -CAkey private/ca.key.pem \
 -CAcreateserial -out certs/web.au-team.irpo.cert.pem \
 -days 30 -sha256
 
-openssl verify -CAfile certs/ca.cert.pem certs/web.au.team.cert.pem
+openssl verify -CAfile certs/ca.cert.pem certs/web.au-team.irpo.cert.pem
 
 openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 \
 -out private/docker.au-team.irpo.key.pem
 chmod 400 private/docker.au-team.irpo.key.pem
 
 openssl req -new -key private/docker.au-team.irpo.key.pem \
--subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=docker.au.team/emailAddress=admin@au-team.irpo" \
+-subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=docker.au-team.irpo/emailAddress=admin@au-team.irpo" \
 -out docker.au-team.irpo.csr
 
 openssl x509 -req -in docker.au-team.irpo.csr \
@@ -2464,7 +2464,7 @@ openssl x509 -req -in docker.au-team.irpo.csr \
 -CAcreateserial -out certs/docker.au-team.irpo.cert.pem \
 -days 30 -sha256
 
-openssl verify -CAfile certs/ca.cert.pem certs/docker.au.team.cert.pem
+openssl verify -CAfile certs/ca.cert.pem certs/docker.au-team.irpo.cert.pem
 ```
 Устанавливаем сертификат на HQ-SRV:
 ```
@@ -2474,13 +2474,13 @@ cp ~/ca/private/web.au-team.irpo.key.pem /etc/apache2/ssl/
 cp ~/ca/certs/ca.cert.pem /etc/apache2/ssl/
 a2enmod ssl
 ```
-Подгатавливаем и отправляем архивы для BR-SRV и HQ-RTR:
+Подгатавливаем и отправляем архивы для BR-SRV и ISP:
 ```
 cd ~/ca
 tar -czf docker_certs.tar.gz certs/docker.au-team.irpo.cert.pem private/docker.au-team.irpo.key.pem certs/ca.cert.pem
 scp -P 2026 docker_certs.tar.gz sshuser@192.168.2.14:/tmp/
-tar -czf hq-rtr_certs.tar.gz certs/ca.cert.pem
-scp -P 2026 hq-rtr_certs.tar.gz sshuser@192.168.1.1:/tmp/
+tar -czf isp_certs.tar.gz certs/ca.cert.pem
+scp isp_certs.tar.gz sshuser@192.168.189.131:/tmp/
 cp /root/ca/certs/web.au-team.irpo.cert.pem /home/sshuser/
 cp /root/ca/private/web.au-team.irpo.key.pem /home/sshuser/
 cp /root/ca/certs/docker.au-team.irpo.cert.pem /home/sshuser/
@@ -2499,10 +2499,10 @@ chmod 644 /etc/nginx/ssl/*.pem
 chmod 600 /etc/nginx/ssl/docker.au-team.irpo.key.pem
 ls -la /etc/nginx/ssl/
 ```
-На HQ-RTR распаковываем:
+На ISP распаковываем:
 ```
 cd /tmp
-tar -xzf hq-rtr_certs.tar.gz
+tar -xzf isp_certs.tar.gz
 mkdir -p /etc/nginx/ssl
 cp certs/ca.cert.pem /etc/nginx/ssl/
 scp -P 2026 sshuser@192.168.1.62:/home/sshuser/web.au-team.irpo.cert.pem /tmp/
@@ -2512,9 +2512,9 @@ scp -P 2026 sshuser@192.168.1.62:/home/sshuser/docker.au-team.irpo.key.pem /tmp/
 cp /tmp/web.au-team.irpo.cert.pem /etc/nginx/ssl/
 cp /tmp/web.au-team.irpo.key.pem /etc/nginx/ssl/
 cp /tmp/docker.au-team.irpo.cert.pem /etc/nginx/ssl/
-cp /tmp/web.docker.au-team.irpo.key.pem /etc/nginx/ssl/
+cp /tmp/docker.au-team.irpo.key.pem /etc/nginx/ssl/
 ```
-На HQ-RTR редактируем nginx /etc/nginx/nginx.conf:
+На ISP редактируем nginx /etc/nginx/sites.avialable.d/proxy.conf:
 ```
 server {
     listen 80;
@@ -2551,8 +2551,8 @@ server {
     listen 443 ssl;
     server_name docker.au-team.irpo;
     
-    ssl_certificate /etc/nginx/ssl/docker.au.team.cert.pem;
-    ssl_certificate_key /etc/nginx/ssl/docker.au.team.key.pem;
+    ssl_certificate /etc/nginx/ssl/docker.au-team.irpo.cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/docker.au-team.irpo.key.pem;
     ssl_trusted_certificate /etc/nginx/ssl/ca.cert.pem;
     
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -2567,7 +2567,7 @@ server {
     }
 }
 ```
-Устанавливаем доверие на HQ-CLI:
+Устанавливаем доверие для HQ-CLI (На HQ-SRV):
 ```
 cp ~/ca/certs/ca.cert.pem ~/ca/certs/CA-HQ.crt
 scp -P 2026 ~/ca/certs/CA-HQ.crt sshuser@192.168.1.3:/tmp/
