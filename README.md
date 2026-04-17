@@ -2109,16 +2109,16 @@ klist
 ```
 cat > /tmp/users.csv << 'EOF'
 login,password,givenname,surname,department,mail
-ivanov,P@ssw0rd,Ivan,Ivanov,IT,ivan.ivanov@au.team
-petrov,P@ssw0rd,Petr,Petrov,Sales,petr.petrov@au.team
-sidorov,P@ssw0rd,Sidor,Sidorov,HR,sidor.sidorov@au.team
-smirnova,P@ssw0rd,Anna,Smirnova,Finance,anna.smirnova@au.team
-kuznetsov,P@ssw0rd,Nikolai,Kuznetsov,IT,nikolai.kuznetsov@au.team
-popova,P@ssw0rd,Elena,Popova,Marketing,elena.popova@au.team
-volkov,P@ssw0rd,Alexey,Volkov,Sales,alexey.volkov@au.team
-sokolov,P@ssw0rd,Dmitry,Sokolov,IT,dmitry.sokolov@au.team
-morozova,P@ssw0rd,Olga,Morozova,HR,olga.morozova@au.team
-novikov,P@ssw0rd,Michael,Novikov,Finance,michael.novikov@au.team
+ivanov,P@ssw0rd,Ivan,Ivanov,IT,ivan.ivanov@au-team.irpo
+petrov,P@ssw0rd,Petr,Petrov,Sales,petr.petrov@au-team.irpo
+sidorov,P@ssw0rd,Sidor,Sidorov,HR,sidor.sidorov@au-team.irpo
+smirnova,P@ssw0rd,Anna,Smirnova,Finance,anna.smirnova@au-team.irpo
+kuznetsov,P@ssw0rd,Nikolai,Kuznetsov,IT,nikolai.kuznetsov@au-team.irpo
+popova,P@ssw0rd,Elena,Popova,Marketing,elena.popova@au-team.irpo
+volkov,P@ssw0rd,Alexey,Volkov,Sales,alexey.volkov@au-team.irpo
+sokolov,P@ssw0rd,Dmitry,Sokolov,IT,dmitry.sokolov@au-team.irpo
+morozova,P@ssw0rd,Olga,Morozova,HR,olga.morozova@au-team.irpo
+novikov,P@ssw0rd,Michael,Novikov,Finance,michael.novikov@au-team.irpo
 EOF
 ```
 Создаем скрипт для импорта юзеров /root/import_users.sh:
@@ -2135,7 +2135,7 @@ NC='\033[0m'
 
 # Configuration
 INPUT_FILE="/tmp/users.csv"
-DOMAIN="au.team"
+DOMAIN="au-team.irpo"
 SEPARATOR=","
 LOG_FILE="/var/log/import_users_$(date +%Y%m%d_%H%M%S).log"
 PASSWORD="P@ssw0rd"
