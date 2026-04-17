@@ -2102,7 +2102,7 @@ iptables-save > /etc/iptables/rules.v4
 ```
 systemctl status samba
 samba-tool domain level show
-kinit administrator@AU.TEAM
+kinit administrator@AU-TEAM.IRPO
 klist
 ```
 Создаем users.csv (если нет)(ПРОБЕЛОВ БЫТЬ НЕ ДОЛЖНО):
