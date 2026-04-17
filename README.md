@@ -2422,13 +2422,13 @@ openssl ciphers -v
 ```
 cd ~/ca
 openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 \
-  -out private/ca.key.pem
+-out private/ca.key.pem
 chmod 400 private/ca.key.pem
 
 openssl req -x509 -new -key private/ca.key.pem \
-  -days 30 -sha256 \
-  -subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=HQ-CA/emailAddress=admin@au.team" \
-  -out certs/ca.cert.pem
+-days 30 -sha256 \
+-subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=HQ-CA/emailAddress=admin@au-team.irpo" \
+-out certs/ca.cert.pem
   
 openssl x509 -in certs/ca.cert.pem -text -noout | grep -E "Issuer:|Subject:|Not Before|Not After"
 ```
@@ -2437,54 +2437,54 @@ openssl x509 -in certs/ca.cert.pem -text -noout | grep -E "Issuer:|Subject:|Not 
 cd ~/ca
 
 openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 \
-  -out private/web.au.team.key.pem
-chmod 400 private/web.au.team.key.pem
+-out private/web.au-team.irpo.key.pem
+chmod 400 private/web.au-team.irpo.key.pem
 
-openssl req -new -key private/web.au.team.key.pem \
-  -subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=web.au.team/emailAddress=admin@au.team" \
-  -out web.au.team.csr
+openssl req -new -key private/web.au-team.irpo.key.pem \
+-subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=web.au.team/emailAddress=admin@au-team.irpo" \
+-out web.au.team.csr
 
-openssl x509 -req -in web.au.team.csr \
-  -CA certs/ca.cert.pem -CAkey private/ca.key.pem \
-  -CAcreateserial -out certs/web.au.team.cert.pem \
-  -days 30 -sha256
+openssl x509 -req -in web.au-team.irpo.csr \
+-CA certs/ca.cert.pem -CAkey private/ca.key.pem \
+-CAcreateserial -out certs/web.au-team.irpo.cert.pem \
+-days 30 -sha256
 
 openssl verify -CAfile certs/ca.cert.pem certs/web.au.team.cert.pem
 
 openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 \
-  -out private/docker.au.team.key.pem
-chmod 400 private/docker.au.team.key.pem
+-out private/docker.au-team.irpo.key.pem
+chmod 400 private/docker.au-team.irpo.key.pem
 
-openssl req -new -key private/docker.au.team.key.pem \
-  -subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=docker.au.team/emailAddress=admin@au.team" \
-  -out docker.au.team.csr
+openssl req -new -key private/docker.au-team.irpo.key.pem \
+-subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/CN=docker.au.team/emailAddress=admin@au-team.irpo" \
+-out docker.au-team.irpo.csr
 
-openssl x509 -req -in docker.au.team.csr \
-  -CA certs/ca.cert.pem -CAkey private/ca.key.pem \
-  -CAcreateserial -out certs/docker.au.team.cert.pem \
-  -days 30 -sha256
+openssl x509 -req -in docker.au-team.irpo.csr \
+-CA certs/ca.cert.pem -CAkey private/ca.key.pem \
+-CAcreateserial -out certs/docker.au-team.irpo.cert.pem \
+-days 30 -sha256
 
 openssl verify -CAfile certs/ca.cert.pem certs/docker.au.team.cert.pem
 ```
 Устанавливаем сертификат на HQ-SRV:
 ```
 mkdir -p /etc/apache2/ssl
-cp ~/ca/certs/web.au.team.cert.pem /etc/apache2/ssl/
-cp ~/ca/private/web.au.team.key.pem /etc/apache2/ssl/
+cp ~/ca/certs/web.au-team.irpo.cert.pem /etc/apache2/ssl/
+cp ~/ca/private/web.au-team.irpo.key.pem /etc/apache2/ssl/
 cp ~/ca/certs/ca.cert.pem /etc/apache2/ssl/
 a2enmod ssl
 ```
 Подгатавливаем и отправляем архивы для BR-SRV и HQ-RTR:
 ```
 cd ~/ca
-tar -czf docker_certs.tar.gz certs/docker.au.team.cert.pem private/docker.au.team.key.pem certs/ca.cert.pem
+tar -czf docker_certs.tar.gz certs/docker.au-team.irpo.cert.pem private/docker.au-team.irpo.key.pem certs/ca.cert.pem
 scp -P 2026 docker_certs.tar.gz sshuser@192.168.2.14:/tmp/
 tar -czf hq-rtr_certs.tar.gz certs/ca.cert.pem
 scp -P 2026 hq-rtr_certs.tar.gz sshuser@192.168.1.1:/tmp/
-cp /root/ca/certs/web.au.team.cert.pem /home/sshuser/
-cp /root/ca/private/web.au.team.key.pem /home/sshuser/
-cp /root/ca/certs/docker.au.team.cert.pem /home/sshuser/
-cp /root/ca/private/docker.au.team.key.pem /home/sshuser/
+cp /root/ca/certs/web.au-team.irpo.cert.pem /home/sshuser/
+cp /root/ca/private/web.au-team.irpo.key.pem /home/sshuser/
+cp /root/ca/certs/docker.au-team.irpo.cert.pem /home/sshuser/
+cp /root/ca/private/docker.au-team.irpo.key.pem /home/sshuser/
 chown sshuser:sshuser /home/sshuser/*.pem
 ```
 На BR-SRV распаковываем:
@@ -2492,11 +2492,11 @@ chown sshuser:sshuser /home/sshuser/*.pem
 cd /tmp
 tar -xzf docker_certs.tar.gz
 mkdir -p /etc/nginx/ssl
-cp certs/docker.au.team.cert.pem /etc/nginx/ssl/
+cp certs/docker.au-team.irpo.cert.pem /etc/nginx/ssl/
 cp certs/ca.cert.pem /etc/nginx/ssl/
-cp private/docker.au.team.key.pem /etc/nginx/ssl/
+cp private/docker.au-team.irpo.key.pem /etc/nginx/ssl/
 chmod 644 /etc/nginx/ssl/*.pem
-chmod 600 /etc/nginx/ssl/docker.au.team.key.pem
+chmod 600 /etc/nginx/ssl/docker.au-team.irpo.key.pem
 ls -la /etc/nginx/ssl/
 ```
 На HQ-RTR распаковываем:
@@ -2505,29 +2505,29 @@ cd /tmp
 tar -xzf hq-rtr_certs.tar.gz
 mkdir -p /etc/nginx/ssl
 cp certs/ca.cert.pem /etc/nginx/ssl/
-scp -P 2026 sshuser@192.168.1.62:/home/sshuser/web.au.team.cert.pem /tmp/
-scp -P 2026 sshuser@192.168.1.62:/home/sshuser/web.au.team.key.pem /tmp/
-scp -P 2026 sshuser@192.168.1.62:/home/sshuser/docker.au.team.cert.pem /tmp/
-scp -P 2026 sshuser@192.168.1.62:/home/sshuser/docker.au.team.key.pem /tmp/
-cp /tmp/web.au.team.cert.pem /etc/nginx/ssl/
-cp /tmp/web.au.team.key.pem /etc/nginx/ssl/
-cp /tmp/docker.au.team.cert.pem /etc/nginx/ssl/
-cp /tmp/web.docker.team.key.pem /etc/nginx/ssl/
+scp -P 2026 sshuser@192.168.1.62:/home/sshuser/web.au-team.irpo.cert.pem /tmp/
+scp -P 2026 sshuser@192.168.1.62:/home/sshuser/web.au-team.irpo.key.pem /tmp/
+scp -P 2026 sshuser@192.168.1.62:/home/sshuser/docker.au-team.irpo.cert.pem /tmp/
+scp -P 2026 sshuser@192.168.1.62:/home/sshuser/docker.au-team.irpo.key.pem /tmp/
+cp /tmp/web.au-team.irpo.cert.pem /etc/nginx/ssl/
+cp /tmp/web.au-team.irpo.key.pem /etc/nginx/ssl/
+cp /tmp/docker.au-team.irpo.cert.pem /etc/nginx/ssl/
+cp /tmp/web.docker.au-team.irpo.key.pem /etc/nginx/ssl/
 ```
 На HQ-RTR редактируем nginx /etc/nginx/nginx.conf:
 ```
 server {
     listen 80;
-    server_name web.au.team;
+    server_name web.au-team.irpo;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl;
-    server_name web.au.team;
+    server_name web.au-team.irpo;
     
-    ssl_certificate /etc/nginx/ssl/web.au.team.cert.pem;
-    ssl_certificate_key /etc/nginx/ssl/web.au.team.key.pem;
+    ssl_certificate /etc/nginx/ssl/web.au-team.irpo.cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/web.au-team.irpo.key.pem;
     ssl_trusted_certificate /etc/nginx/ssl/ca.cert.pem;
     
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -2543,13 +2543,13 @@ server {
 }
 server {
     listen 80;
-    server_name docker.au.team;
+    server_name docker.au-team.irpo;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl;
-    server_name docker.au.team;
+    server_name docker.au-team.irpo;
     
     ssl_certificate /etc/nginx/ssl/docker.au.team.cert.pem;
     ssl_certificate_key /etc/nginx/ssl/docker.au.team.key.pem;
@@ -2579,9 +2579,9 @@ update-ca-trust
 ```
 Проверяем:
 ```
-curl -I https://web.au.team
-curl -I https://docker.au.team
-openssl s_client -connect web.au.team:443 -showcerts < /dev/null 2>/dev/null | openssl x509 -text | grep -E "Issuer:|Subject:|Not Before|Not After"
+curl -I https://web.au-team.irpo
+curl -I https://docker.au-team.irpo
+openssl s_client -connect web.au-team.irpo:443 -showcerts < /dev/null 2>/dev/null | openssl x509 -text | grep -E "Issuer:|Subject:|Not Before|Not After"
 ```
 
  </details>
