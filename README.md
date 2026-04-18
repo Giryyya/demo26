@@ -2613,10 +2613,10 @@ config setup
     charondebug="ike 2, knl 2, cfg 2"
 
 conn gre-tunnel
-    left=10.10.10.1
-    leftid=10.10.10.1
-    right=10.10.10.2
-    rightid=10.10.10.2
+    left=172.16.1.2
+    leftid=172.16.1.2
+    right=172.16.2.2
+    rightid=172.16.2.2
     type=transport
     keyexchange=ikev2
     authby=secret
@@ -2634,10 +2634,10 @@ config setup
     charondebug="ike 2, knl 2, cfg 2"
 
 conn gre-tunnel
-    left=10.10.10.2
-    leftid=10.10.10.2
-    right=10.10.10.1
-    rightid=10.10.10.1
+    left=172.16.2.2
+    leftid=172.16.2.2
+    right=172.16.1.2
+    rightid=172.16.1.2
     type=transport
     keyexchange=ikev2
     authby=secret
@@ -2655,7 +2655,7 @@ conn gre-tunnel
 ```
 Добавляем строчку в файл /etc/strongswan/ipsec.secrets:
 ```
-10.10.10.1 10.10.10.2 : PSK "TestPassword123"
+172.16.1.2 172.16.2.2 : PSK "TestPassword123"
 ```
 Изменяем права к файлу:
 ```
@@ -2708,7 +2708,7 @@ systemctl status strongswan-starter
 ipsec status
 ```
 
-<img width="821" height="89" alt="image" src="https://github.com/user-attachments/assets/e90393b9-5fd5-4a39-b22f-c7a462d94aae" />
+<img width="780" height="108" alt="image" src="https://github.com/user-attachments/assets/1918b0cb-fc96-4fc5-bfc5-f33d9bfad6b9" />
 
  </details>
 
