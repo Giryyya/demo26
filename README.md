@@ -2613,10 +2613,10 @@ config setup
     charondebug="ike 2, knl 2, cfg 2"
 
 conn gre-tunnel
-    left=172.16.1.2
-    leftid=172.16.1.2
-    right=172.16.2.2
-    rightid=172.16.2.2
+    left=10.10.10.1
+    leftid=10.10.10.1
+    right=10.10.10.2
+    rightid=10.10.10.2
     type=transport
     keyexchange=ikev2
     authby=secret
@@ -2634,10 +2634,10 @@ config setup
     charondebug="ike 2, knl 2, cfg 2"
 
 conn gre-tunnel
-    left=172.16.2.2
-    leftid=172.16.2.2
-    right=172.16.1.2
-    rightid=172.16.1.2
+    left=10.10.10.2
+    leftid=10.10.10.2
+    right=10.10.10.1
+    rightid=10.10.10.1
     type=transport
     keyexchange=ikev2
     authby=secret
@@ -2655,7 +2655,7 @@ conn gre-tunnel
 ```
 Добавляем строчку в файл /etc/strongswan/ipsec.secrets:
 ```
-172.16.1.2 172.16.2.2 : PSK "TestPassword123"
+10.10.10.1 10.10.10.2 : PSK "TestPassword123"
 ```
 Изменяем права к файлу:
 ```
@@ -2664,12 +2664,12 @@ chown root:root /etc/strongswan/ipsec.secrets
 ```
 Настраиваем Iptables на обоих роутерах:
 ```
-iptables -I INPUT -i ens33 -p gre -j ACCEPT
-iptables -I OUTPUT -o ens33 -p gre -j ACCEPT
-iptables -I INPUT -i ens33 -p udp --dport 500 -j ACCEPT
-iptables -I INPUT -i ens33 -p udp --dport 4500 -j ACCEPT
-iptables -I INPUT -i ens33 -p esp -j ACCEPT
-iptables -I INPUT -i ens33 -p ah -j ACCEPT
+iptables -I INPUT -i tun1 -p gre -j ACCEPT
+iptables -I OUTPUT -o tun1 -p gre -j ACCEPT
+iptables -I INPUT -i tun1 -p udp --dport 500 -j ACCEPT
+iptables -I INPUT -i tun1 -p udp --dport 4500 -j ACCEPT
+iptables -I INPUT -i tun1 -p esp -j ACCEPT
+iptables -I INPUT -i tun1 -p ah -j ACCEPT
 iptables-save > /etc/iptables/rules.v4
 ```
 Настраиваем OSPF:
@@ -2708,7 +2708,7 @@ systemctl status strongswan-starter
 ipsec status
 ```
 
-<img width="816" height="88" alt="image" src="https://github.com/user-attachments/assets/6b437d94-946f-444d-92e0-7c7210086f83" />
+<img width="821" height="89" alt="image" src="https://github.com/user-attachments/assets/e90393b9-5fd5-4a39-b22f-c7a462d94aae" />
 
  </details>
 
