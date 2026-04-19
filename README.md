@@ -2798,8 +2798,7 @@ iptables-save > /etc/iptables/rules.v4
 
 Устанавливаем cups:
 ```
-apt-get update
-apt-get install cups cups-pdf
+apt-get update && apt-get install cups cups-pdf
 ```
 Создаем группу и добавляем туда юзера (после этого необходимо перелогиниться):
 ```
@@ -2813,24 +2812,26 @@ lpinfo --make-and-model "PDF" -m
 Настраиваем доступ в консоль и запускаем cups:
 ```
 cupsctl --remote-admin
-sudo systemctl restart cups
-sudo systemctl enable cups
-sudo systemctl status cups
+systemctl restart cups
+systemctl enable cups
+systemctl status cups
 ```
 Открываем в браузере (login - root, passwd - toor):
 ```
 http://localhost:631/admin
 ```
 Жмем:
-```
-Добавить принтер
-CUPS-PDF (Virtual PDF Printer)
-Название Virtual_PDF
-Расположение hq-srv
-Разрешить совместный доступ
-Создать: Generic
-Модель: Generic CUPS-PDF Printer (w/ options) (en)
-```
+
+<img width="1718" height="869" alt="image" src="https://github.com/user-attachments/assets/8e91bc3d-f36b-4f85-837a-b25b09461407" />
+
+<img width="684" height="459" alt="image" src="https://github.com/user-attachments/assets/06e67cab-4496-41df-a5b3-8353d0e9d294" />
+
+<img width="829" height="421" alt="image" src="https://github.com/user-attachments/assets/adac98ae-99ca-4a5b-9d5f-f01b6f4ca840" />
+
+<img width="658" height="632" alt="image" src="https://github.com/user-attachments/assets/62ec747f-d6d4-4c9d-b04f-18c82063d1b7" />
+
+<img width="920" height="629" alt="image" src="https://github.com/user-attachments/assets/290ecc0a-fc4d-41f8-833d-4592f7dba7a0" />
+
 Назначаем принтер по умолчанию:
 ```
 lpadmin -d Virtual_PDF
@@ -2851,14 +2852,13 @@ systemctl restart cups
 ```
 echo "Test print job" > ~/test.txt
 lp -d Virtual_PDF ~/test.txt
-ls -la root/PDF/
+ls -la /root/PDF/
 ```
 ### Должен появится файл test_job.pdf
 
 На HQ-CLI устанавливаем cups:
 ```
-apt-get update
-apt-get install cups cups-filters cups-pk-helper
+apt-get update && apt-get install cups cups-filters cups-pk-helper
 ```
 Создаем директорию для печати:
 ```
@@ -2871,7 +2871,7 @@ cat ~/.cups/client.conf
 ```
 Проверяем доступность:
 ```
-curl -I http://192.168.1.100:631
+curl -I http://192.168.1.62:631
 lpstat -s
 ```
 Устанавливаем как принтер по умолчанию:
@@ -2904,19 +2904,23 @@ Listen 0.0.0.0:631
   Order allow,deny
   Allow localhost
   Allow 192.168.1.0/26
+  Allow All
   AuthType None
+  Satisfy Any
 </Location>
 <Location /printers>
   Order allow,deny
   Allow localhost
   Allow 192.168.1.0/26
   AuthType None
+  Satisfy Any
 </Location>
 <Location /printers/Virtual_PDF>
   Order allow,deny
   Allow localhost
   Allow 192.168.1.0/26
   AuthType None
+  Satisfy Any
 </Location>
 EOF
 lpadmin -x Virtual_PDF 2>/dev/null
