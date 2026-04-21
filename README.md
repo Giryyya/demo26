@@ -2083,6 +2083,26 @@ iptables-save > /etc/iptables/rules.v4
 
 </details>
 
+##   Удобным способом установите приложение Яндекс Браузер на HQ-CLI
+<details>
+    <summary>ЗАДАНИЕ</summary>
+
+Установку браузера отметьте в отчёте.
+
+ </details>
+ 
+    <summary>НАЖМИ</summary>
+
+### Установка через терминал:
+```
+apt-get update && apt-get install yandex-browser-stable
+```
+### Установка через менеджер пакетов:
+
+![Uploading image.png…]()
+
+ </details>
+ 
 # Модуль 3
 ##  Выполните импорт пользователей в домен au-team.irpo
 <details>
