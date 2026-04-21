@@ -2090,7 +2090,7 @@ iptables-save > /etc/iptables/rules.v4
 Установку браузера отметьте в отчёте.
 
  </details>
- 
+<details>
     <summary>НАЖМИ</summary>
 
 ### Установка через терминал:
@@ -2099,7 +2099,7 @@ apt-get update && apt-get install yandex-browser-stable
 ```
 ### Установка через менеджер пакетов:
 
-![Uploading image.png…]()
+<img width="1265" height="840" alt="image" src="https://github.com/user-attachments/assets/2cdfee3c-f0aa-417f-ab6a-64475f4dbd81" />
 
  </details>
  
