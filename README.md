@@ -3224,11 +3224,11 @@ logrotate -f /etc/logrotate.d/central-logs
  Добавляем DNS записи на HQ-SRV и HQ-CLI:
 HQ-SRV: 
 ```
-echo "127.0.0.1 mon.au.team" >> /etc/hosts
+echo "127.0.0.1 mon.au-team.irpo" >> /etc/hosts
 ```
 HQ-CLI:
 ```
-echo "192.168.1.62 mon.au.team" >> /etc/hosts
+echo "192.168.1.62 mon.au-team.irpo" >> /etc/hosts
 ```
 ### Будем использовать prometheus с grafana:
 ### HQ-SRV:
@@ -3406,8 +3406,8 @@ EOF
 cat > /opt/grafana/conf/custom.ini << 'EOF'
 [server]
 http_port = 3000
-domain = mon.au.team
-root_url = http://mon.au.team:3000
+domain = mon.au-team.irpo
+root_url = http://mon.au-team.irpo:3000
 
 [auth]
 disable_login_form = false
@@ -3432,10 +3432,10 @@ netstat -tulpn | grep 3000
 ```
 На HQ-CLI добавляем dns запись:
 ```
-echo "192.168.1.62 mon.au.team" >> /etc/hosts
+echo "192.168.1.62 mon.au-team.irpo" >> /etc/hosts
 ```
 
-Открываем графану по адресу mon.au.team:3000
+Открываем графану по адресу mon.au-team.irpo:3000
 ```
 login:admin
 password:P@ssw0rd
