@@ -3086,10 +3086,10 @@ netstat -tulpn | grep 514
 ### Возможно придется добавить правило в iptables на роутерах:
 ```
 iptables -t nat -L PREROUTING -n -v | grep 514
-iptables -I FORWARD -s 192.168.2.14 -d 192.168.1.62 -p upd --dport 514 -j ACCEPT
-iptabes -I FORWARD -s 192.168.1.62 -d 192.168.2.14 -p udp --sport 514 -j ACCEPT
+iptables -I FORWARD -s 192.168.2.14 -d 192.168.1.62 -p udp --dport 514 -j ACCEPT
+iptables -I FORWARD -s 192.168.1.62 -d 192.168.2.14 -p udp --sport 514 -j ACCEPT
 iptables -I FORWARD -p tcp --dport 514 -j ACCEPT
-iptabes -I FORWARD -p udp --dport 514 -j ACCEPT
+iptables -I FORWARD -p udp --dport 514 -j ACCEPT
 iptables-save > /etc/iptables/rules.v4
 ```
 
@@ -3125,6 +3125,7 @@ EOF
 ```
 rsyslogd -N1
 systemctl restart rsyslog
+systemctl enable rsyslog
 systemctl status rsyslog --no-pager -l
 ```
 Проверяем отправку:
