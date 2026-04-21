@@ -3009,7 +3009,7 @@ ls -la /var/spool/cups-pdf/ANONYMOUS/
  <details>
     <summary>НАЖМИ</summary>
   
-### Настраиваем HQ-RTR:
+### Настраиваем HQ-SRV:
 Устанавливаем rsyslog:
 ```
 apt-get update && apt-get install rsyslog -y
