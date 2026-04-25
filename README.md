@@ -286,7 +286,8 @@ RTR
 
   <details>
     <summary>НАЖМИ</summary>
-  
+
+### HQ-SRV и BR-SRV
 Создаем пользователя remote_user с идентификатором 2026:
 ```
 useradd -u 2026 remote_user
@@ -306,7 +307,25 @@ usermod -aG wheel remote_user
 ```
 remote_user ALL=(ALL) NOPASSWD: ALL
 ```
+### HQ-RTR и BR-RTR
 
+Создаем пользователя net_admin:
+```
+useradd net_admin
+```
+
+Задаем пароль:
+```
+passwd net_admin
+```
+Добавляем в группу sudo:
+```
+usermod -aG wheel net_admin
+```
+Для того чтобы при выполнении команды sudo не запрашивался пароль необходимо отредактировать файл /etc/sudoers. Вписываем:
+```
+net_admin ALL=(ALL) NOPASSWD: ALL
+```
  </details>
 
  ##  Настройте коммутацию в сегменте HQ:
