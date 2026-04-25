@@ -3519,7 +3519,6 @@ vim /etc/ansible/inventory-pc.yml
 Вставляем (тут важны пробелы в строчках, как файл должен выглядеть скрин ниже):
 ```
 ---
----
 - name: Collect PC Information
   hosts: 192.168.1.3, 192.168.1.62
   gather_facts: yes
