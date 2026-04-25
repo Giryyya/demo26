@@ -1192,12 +1192,12 @@ ssh-copy-id -p 2026 sshuser@192.168.1.1
 Создаем файл инвентаря и вносим туда хосты /etc/ansible/hosts:
 ```
 [hq]
-192.168.1.1 ansible_port=2026 ansible_user=sshuser ansible_python_interpreter=/usr/bin/python3 ansible_connection=local
-192.168.1.3 ansible_port=2026 ansible_user=sshuser ansible_python_interpreter=/usr/bin/python3
-192.168.1.62 ansible_port=2026 ansible_user=sshuser ansible_python_interpreter=/usr/bin/python3
+HQ-SRV ansible_host=192.168.1.62 ansible_port=2026 ansible_user=sshuser ansible_python_interpreter=/usr/bin/python3
+HQ-CLI ansible_host=192.168.1.3 ansible_port=2026 ansible_user=sshuser ansible_python_interpreter=/usr/bin/python3
+HQ-RTR ansible_host=192.168.1.1 ansible_port=2026 ansible_user=sshuser ansible_python_interpreter=/usr/bin/python3 ansible_connection=local
 
 [br]
-192.168.2.1 ansible_port=2026 ansible_user=sshuser ansible_python_interpreter=/usr/bin/python3
+BR-RTR ansible_host=192.168.2.1 ansible_port=2026 ansible_user=sshuser ansible_python_interpreter=/usr/bin/python3
 ```
 ### Если будут возникать ошибки формата как на скрине, то каждому хосту прописываем параметр ansible_connection=local:
 
