@@ -209,7 +209,8 @@ sysctl -p
 mkdir /etc/iptables
 iptables-save>/etc/iptables/rules.v4
 ```
-Для того чтобы после перезагрузки роутера не сбрасывались настройки необходимо прописать systemd-юнит iptables-restore.service:
+Для того чтобы после перезагрузки роутера не сбрасывались настройки необходимо прописать systemd-юнит (директория /etc/systemd/system)
+iptables-restore.service:
 ```
 [Unit]
 Description=Restore iptables rules
