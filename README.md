@@ -127,7 +127,7 @@ ipv4route(на HQ-RTR и BR-RTR тоже настраиваем):
 <img width="223" height="27" alt="image" src="https://github.com/user-attachments/assets/6af8381c-3ec2-4a49-9efe-2d3cf6ac7eb3" />
 
 
-Для того чтобы при перезапуске не сбрасывался адреса устройства необходимо в папке /etc/systemd/system создать файл сервиса:
+Для того чтобы при перезапуске не сбрасывался адреса устройства необходимо в директории /etc/systemd/system создать файл сервиса:
 1) network-restart.timer:
 ```
 [Unit]
