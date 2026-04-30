@@ -476,7 +476,7 @@ TUNREMOTE=gre
 TYPE=iptun
 TUNTTL=64
 TUNMTU=1476
-TUNNOPTIONS='ttl 64'
+TUNOPTIONS='ttl 64'
 DISABLE=no
 ```
 BR-RTR:
@@ -487,7 +487,7 @@ TUNREMOTE=gre
 TYPE=iptun
 TUNTTL=64
 TUNMTU=1476
-TUNNOPTIONS='ttl 64'
+TUNOPTIONS='ttl 64'
 DISABLE=no
 ```
 Здесь TUNLOCAL - IP адресс адаптера в сторону ISP на настраиваемом роутере, TUNREMOTE на другом роутере.
