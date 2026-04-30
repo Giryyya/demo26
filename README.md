@@ -468,10 +468,17 @@ ssh -p 2026 sshuser@192.168.1.62
  ```
 mkdir /etc/net/ifaces/tun1
 ```
-Редактируем файл options следующим образом (HQ-RTR):
-
-<img width="191" height="196" alt="image" src="https://github.com/user-attachments/assets/107f46e5-c8c4-43b8-84fb-ae5e7c9a8ad3" />
-
+Редактируем файл /etc/net/ifaces/tun1/options следующим образом (HQ-RTR):
+```
+TUNELOCAL=172.16.1.2
+TUNEREMOTE=172.16.2.2
+TUNEREMOTE=gre
+TYPE=iptun
+TUNTTL=64
+TUNMTU=1476
+TUNNOPTIONS='ttl 64'
+DISABLE=no
+```
 Здесь TUNLOCAL - IP адресс адаптера в сторону ISP на настраиваемом роутере, TUNREMOTE на другом роутере.
 
 Задаем IP адрес:
