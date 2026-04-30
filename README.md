@@ -479,6 +479,17 @@ TUNMTU=1476
 TUNNOPTIONS='ttl 64'
 DISABLE=no
 ```
+BR-RTR:
+```
+TUNELOCAL=172.16.2.2
+TUNEREMOTE=172.16.1.2
+TUNEREMOTE=gre
+TYPE=iptun
+TUNTTL=64
+TUNMTU=1476
+TUNNOPTIONS='ttl 64'
+DISABLE=no
+```
 Здесь TUNLOCAL - IP адресс адаптера в сторону ISP на настраиваемом роутере, TUNREMOTE на другом роутере.
 
 Задаем IP адрес:
