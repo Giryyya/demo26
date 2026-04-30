@@ -562,10 +562,7 @@ no ip ospf passive
 ip ospf authentication
 ip ospf authentication-key password
 exit
-```
-Не забываем сохранить изменения (как в циске):
-```
-write
+do wr
 ```
 Перезапускаем frr:
 ```
