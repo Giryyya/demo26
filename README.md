@@ -470,9 +470,9 @@ mkdir /etc/net/ifaces/tun1
 ```
 Редактируем файл /etc/net/ifaces/tun1/options следующим образом (HQ-RTR):
 ```
-TUNELOCAL=172.16.1.2
-TUNEREMOTE=172.16.2.2
-TUNEREMOTE=gre
+TUNLOCAL=172.16.1.2
+TUNREMOTE=172.16.2.2
+TUNREMOTE=gre
 TYPE=iptun
 TUNTTL=64
 TUNMTU=1476
@@ -481,9 +481,9 @@ DISABLE=no
 ```
 BR-RTR:
 ```
-TUNELOCAL=172.16.2.2
-TUNEREMOTE=172.16.1.2
-TUNEREMOTE=gre
+TUNLOCAL=172.16.2.2
+TUNREMOTE=172.16.1.2
+TUNREMOTE=gre
 TYPE=iptun
 TUNTTL=64
 TUNMTU=1476
