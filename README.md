@@ -164,7 +164,7 @@ WantedBy=multi-user.target
 ```
 systemctl enable network-restart.timer
 ```
-Прописываем днс на всех адаптера (лишним не будет) - файл /etc/net/ifaces/ens33/resolv.conf:
+Прописываем днс на всех адаптера - файл /etc/net/ifaces/ens33/resolv.conf:
 ```
 nameserver 8.8.8.8
 ```
@@ -358,7 +358,7 @@ net_admin ALL=(ALL) NOPASSWD: ALL
  <details>
     <summary>НАЖМИ</summary>
  
-Для начала установим nmtui дабы удобнее было настраивать:
+Устанавливаем nmtui:
 ```
 apt-get install NetworkManager-tui
 ```
@@ -366,7 +366,6 @@ apt-get install NetworkManager-tui
 ```
 nameserver 8.8.8.8
 ```
-
 Запускаем nmtui:
 ```
 systemctl start NetworkManager
@@ -390,8 +389,6 @@ iface ens33.100 inet static
     dns-nameservers 8.8.8.8
     vlan-raw-device ens33
 ```
-
-В теории оно должно работать, но не работает днс
 
  </details>
 
