@@ -313,7 +313,7 @@ iptables-restore -t /etc/sysconfig/iptables
 ```
 Если интернет на хостах не появился, еще раз прописываем:
 ```
-sudo iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
+iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
 ```
 
    </details> 
@@ -389,7 +389,7 @@ net_admin ALL=(ALL) NOPASSWD: ALL
 ```
  </details>
 
- ##  Настройте коммутацию в сегменте HQ:
+ ##  Настройте коммутацию в сегменте HQ (VLAN. Не делал):
 
   <details>
     <summary>ЗАДАНИЕ</summary>
