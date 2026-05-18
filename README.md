@@ -135,7 +135,7 @@ mkdir /etc/net/ifaces/ens36
 mkdir /etc/net/ifaces/ens37
 mkdir /etc/net/ifaces/ens38
 ```
-### не забываем про ivp4address(ip адрес) и ipv4route (шлюз)
+### не забываем про ipv4address(ip адрес) и ipv4route (шлюз)
 
 Скопировать Options можно из ens33:
 
