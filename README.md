@@ -163,6 +163,8 @@ ipv4route(на HQ-RTR и BR-RTR тоже настраиваем):
 Для того чтобы при перезапуске не сбрасывался адреса устройства необходимо в директории /etc/systemd/system создать файл сервиса:
 1) network-restart.timer:
 ```
+cd /etc/systemd/system
+cat > /etc/systemd/system/network-restart.timer << 'EOF'
 [Unit]
 Description=Restart Network Timer
 
@@ -172,9 +174,9 @@ Unit=network-restart.service
 
 [Install]
 WantedBy=timers.target
-```
-2) network-restart.service:
-```
+EOF
+
+cat > /etc/systemd/system/network-restart.service << 'EOF'
 [Unit]
 Description=Restart Network Service
 
@@ -184,7 +186,12 @@ ExecStart=/bin/systemctl restart network
 
 [Install]
 WantedBy=multi-user.target
+EOF
 ```
+Необходимо удалить лишние пробелы из файла:
+
+<img width="854" height="629" alt="image" src="https://github.com/user-attachments/assets/f3600880-ed55-411c-ba35-6cec5399d96d" />
+
 Чтобы запустить службу прописываем:
 ```
 systemctl enable network-restart.timer
