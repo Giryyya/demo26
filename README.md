@@ -626,10 +626,10 @@ show ip ospf route
 <img width="498" height="220" alt="image" src="https://github.com/user-attachments/assets/f7df5030-7a98-4561-a69c-ba35601ba708" />
 
 ## Настраиваем доступ к ISP:
-Прописываем маршруты на ISP,:
+Прописываем маршруты на ISP:
 ```
 echo "192.168.1.0/26 via 172.16.1.2" > /etc/net/ifaces/ens38/ipv4route
-
+echo "192.168.2.0/28 via 172.16.2.2" > /etc/net/ifaces/ens37/ipv4route
 ```
 Прописываем Iptables на HQ-RTR, BR-RTR:
 ```
