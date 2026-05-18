@@ -11,8 +11,8 @@
 
 | Название устройства | ОС | FQDN |
 |:-|:-|:-|
-| ISP (интерфейс в сторону HQ-RTR) | Alt Server | docker.au-team.irpo |
-| ISP (интерфейс в сторону BR-RTR) | Alt Server | web.au-team.irpo |
+| ISP (интерфейс в сторону HQ-RTR) | Alt Server | isp.au-team.irpo |
+| ISP (интерфейс в сторону BR-RTR) | Alt Server | isp.au-team.irpo |
 | HQ-RTR  | EcoRouter/Alt | hq-rtr.au-team.irpo |
 | BR-RTR | EcoRouter/Alt | br-rtr.au-team.irpo |
 | HQ-SRV | Alt Server | hq-srv.au-team.irpo |
