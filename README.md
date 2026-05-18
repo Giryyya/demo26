@@ -131,8 +131,11 @@ ip link show
 Далее необходимо создать директорию по пути
 
 ```
-mkdir /etc/net/ifaces/ не забываем про ivp4address(ip адрес) и ipv4route (шлюз)
+mkdir /etc/net/ifaces/ens36
+mkdir /etc/net/ifaces/ens37
+mkdir /etc/net/ifaces/ens38
 ```
+### не забываем про ivp4address(ip адрес) и ipv4route (шлюз)
 
 Скопировать Options можно из ens33:
 
