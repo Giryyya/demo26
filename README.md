@@ -267,6 +267,8 @@ iptables-save>/etc/iptables/rules.v4
 Для того чтобы после перезагрузки роутера не сбрасывались настройки необходимо прописать systemd-юнит (директория /etc/systemd/system)
 iptables-restore.service:
 ```
+cd /etc/systemd/system
+cat > /etc/systemd/system/iptables-restore.service << 'EOF'
 [Unit]
 Description=Restore iptables rules
 Before=network.target
@@ -277,7 +279,10 @@ ExecStart=/sbin/iptables-restore /etc/iptables/rules.v4
 
 [Install]
 WantedBy=multi-user.target
+EOF
 ```
+### Убираем пробелы как в предыдущем пункте.
+
 Далее необходимо включить юнит:
 ```
 systemctl enable iptables-restore.service
