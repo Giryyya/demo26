@@ -1098,6 +1098,7 @@ mdadm --detail --scan --verbose /dev/md0 > /etc/mdadm.conf
 Монтируем массив:
 ```
 echo '/dev/md0 /raid ext4 defaults 0 0' >> /etc/fstab
+mkdir /raid
 mount /dev/md0 /raid
 ```
 Проверяем массив:
