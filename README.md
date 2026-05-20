@@ -645,7 +645,7 @@ echo "192.168.2.0/28 via 172.16.2.2" > /etc/net/ifaces/ens37/ipv4route
 ```
 Прописываем Iptables на HQ-RTR, BR-RTR:
 ```
-iptables -t nat -D POSTROUTING -o ens33 -j MASQUERADE
+iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
 iptables -t nat -A POSTROUTING -o ens33 ! -d 172.16.0.0/12 -j MASQUERADE
 iptables-save > /etc/iptables/rules.v4
 ```
