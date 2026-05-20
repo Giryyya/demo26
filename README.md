@@ -686,18 +686,19 @@ iptables-save > /etc/iptables/rules.v4
  <details>
     <summary>НАЖМИ</summary>
   
-  Для начала укажем сетевой интерфейс, через который будет работать DHCP-сервер:
+  Указываем сетевой интерфейс, через который будет работать DHCP-сервер:
 ```
 vim /etc/sysconfig/dhcpd
 ```
 
 <img width="567" height="147" alt="image" src="https://github.com/user-attachments/assets/cd9ea117-b1f3-43e2-afa7-785c9851fbd5" />
 
-В папке /etc/dhcp/ необходимо создать файл dhcpd.conf:
+В директории /etc/dhcp/ создаем файл dhcpd.conf:
 ```
+cd /etc/dhcp/
 cp dhcpd.conf.example dhcpd.conf
 ```
-Отредактируйте файл dhcpd.conf следующим образом:
+Редактируем файл dhcpd.conf следующим образом:
 
 <img width="564" height="204" alt="image" src="https://github.com/user-attachments/assets/e7392380-c2cd-48a2-8484-c4701e7ce6ca" />
 
