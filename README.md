@@ -707,7 +707,7 @@ cp dhcpd.conf.example dhcpd.conf
 systemctl restart dhcpd
 ```
 
-Чтобы служба включалась после перезапуска устройства можно добавить ее в systemd юнит следующим образом(редактируется служба network-restart.service):
+Чтобы служба включалась после перезапуска устройства можно добавить ее в systemd юнит следующим образом(редактируется служба etc/systemd/system/network-restart.service):
 
 ![image](https://github.com/user-attachments/assets/e929cbfd-2d7e-49c1-9a27-db636dfb165c)
 
