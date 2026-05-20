@@ -1,4 +1,4 @@
-# Информация по сети
+<img width="895" height="643" alt="image" src="https://github.com/user-attachments/assets/5d17fd6d-38ff-4715-96ac-0df801d7b3c0" /># Информация по сети
 ### Схема сети:
 
  <details>
@@ -790,7 +790,7 @@ named-checkconf -z
 
 Чтобы днс заработал на клиентах необходимо добавить адрес сервера в resolv.conf. Это делается разными способами и зависит по всей видимости от типа ОС (сервер/воркстейшн) и (почему-то) от наличия графики. Конечной целью будет привести файл /etc/resolv.conf к следующему виду:
 
-<img width="450" height="123" alt="image" src="https://github.com/user-attachments/assets/328af76d-079d-411f-ab39-c770fbfdce94" />
+<img width="469" height="192" alt="image" src="https://github.com/user-attachments/assets/b0a24ce9-da6f-44b2-a966-a352c0568fbe" />
 
 Это можно сделать разными способами:
 
@@ -798,7 +798,7 @@ named-checkconf -z
 
 В /etc/net/ifaces/ens33/resolv.conf прописываем:
 ```
-search au.team
+search au.team.irpo
 nameserver 192.168.1.62
 ```
 И так делаем во всех интерфейсах (на HQ-SRV добавляем еще 8.8.8.8 или другой резолвер)
