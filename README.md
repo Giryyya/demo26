@@ -1,4 +1,4 @@
-<img width="895" height="643" alt="image" src="https://github.com/user-attachments/assets/5d17fd6d-38ff-4715-96ac-0df801d7b3c0" /># Информация по сети
+# Информация по сети
 ### Схема сети:
 
  <details>
@@ -884,7 +884,7 @@ samba-tool domain provision --use-rfc2307 --interactive
 |Realm | AU-TEAM.IRPO |
 | Domain | AU-TEAM |
 | Server Role  | dc |
-| DNS backend | EcoRouter/Alt 
+| DNS backend | SAMBA_INTERNAL | 
 |DNS forwarder | 192.168.1.62  |
 | Administrator password | P@ssw0rd |
 
